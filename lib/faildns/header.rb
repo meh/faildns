@@ -190,6 +190,37 @@ class Header
   def [] (name)
     @data[name]
   end
+
+  def pack
+    [
+      self[:ID],
+
+      ( ((self[:QR] == :RESPONSE) ? 1 << 15 : 0) \
+      | ((tmp = {
+          :QUERY  => 0,
+          :IQUERY => 1,
+          :STATUS => 2
+        }[self[:OPCODE]]) ? tmp << 14 : 0) \
+      | ((self[:AA]) ? 1 << 10 : 0) \
+      | ((self[:TC]) ? 1 << 9  : 0) \
+      | ((self[:RD]) ? 1 << 8  : 0) \
+      | ((self[:RA]) ? 1 << 7  : 0) \
+      | ((tmp = {
+          :OK              => 0,
+          :FORMAT_ERROR    => 1,
+          :SERVER_FAILURE  => 2,
+          :NAME_ERROR      => 3,
+          :NOT_IMPLEMENTED => 4,
+          :REFUSED         => 5
+        }[self[:RCODE]]) ? tmp : 0)
+      ),
+
+      self[:QDCOUNT],
+      self[:ANCOUNT],
+      self[:NSCOUNT],
+      self[:ARCOUNT]
+    ].pack('nnnnnn')
+  end
 end
 
 end

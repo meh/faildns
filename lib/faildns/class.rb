@@ -55,6 +55,10 @@ class Class
     end
   end
 
+  def pack
+    [@value].pack('n')
+  end
+
   def to_sym
     Values[@value]
   end

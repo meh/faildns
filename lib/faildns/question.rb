@@ -97,7 +97,7 @@ class Question
 
   def initialize (what)
     if what.is_a? String
-      @data = Header.parse(what)
+      @data = Question.parse(what)
     elsif what.is_a? Hash
       @data = what
     else
@@ -107,6 +107,21 @@ class Question
 
   def [] (name)
     @data[name]
+  end
+
+  def pack
+    result = ''
+
+    self[:QNAME].each {|name|
+      result += [name.length].pack('c') + name
+    }
+
+    result += [0].pack('c')
+
+    result += self[:QTYPE].pack
+    result += self[:QCLASS].pack
+
+    return result
   end
 end
 

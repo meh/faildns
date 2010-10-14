@@ -29,32 +29,56 @@ class Message
     if args.length == 1
       string = args.shift.clone
 
-      @header = Header.parse(string); string[0, Header.length(string)] = ''
+      @header = Header.new(string); string[0, Header.length(string)] = ''
 
       @questions = []
       1.upto(@header[:QDCOUNT]) {
-        @questions << Question.parse(string); string[0, Question.length(string)] = ''
+        @questions << Question.new(string); string[0, Question.length(string)] = ''
       }
 
       @answers = []
       1.upto(@header[:ANCOUNT]) {
-        @answers << ResourceRecord.parse(string); string[0, ResourceRecord.length(string)] = ''
+        @answers << ResourceRecord.new(string); string[0, ResourceRecord.length(string)] = ''
       }
 
       @authorities = []
       1.upto(@header[:NSCOUNT]) {
-        @authorities << ResourceRecord.parse(string); string[0, ResourceRecord.length(string)] = ''
+        @authorities << ResourceRecord.new(string); string[0, ResourceRecord.length(string)] = ''
       }
 
       @additionals = []
       1.upto(@header[:ARCOUNT]) {
-        @additionals << ResourceRecord.parse(string); string[0, ResourceRecord.length(string)] = ''
+        @additionals << ResourceRecord.new(string); string[0, ResourceRecord.length(string)] = ''
       }
     elsif args.length > 1
       @header, @questions, @answers, @authorities, @additionals = *args
     else
       raise ArgumentError.new('You have to pass at least 1 parameter.')
     end
+  end
+
+  def pack
+    result = ''
+
+    result += @header.pack
+
+    @questions.each {|question|
+      result += question.pack
+    }
+
+    @answers.each {|answer|
+      result += answer.pack
+    }
+
+    @authorities.each {|authority|
+      result += answer.pack
+    }
+
+    @additionals.each {|additional|
+      result += additional.pack
+    }
+
+    return result
   end
 end
 
