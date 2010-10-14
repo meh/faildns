@@ -142,13 +142,27 @@ class Header
       :ID => data[0],
 
       :QR     => (data[1] & 0x8000 != 0) ? :RESPONSE : :QUERY,
-      :OPCODE => { 0 => :QUERY, 1 => :IQUERY, 2 => :STATUS }[((data[1] & 0x7800) >> 11)],
+
+      :OPCODE => {
+        0 => :QUERY,
+        1 => :IQUERY,
+        2 => :STATUS
+      }[((data[1] & 0x7800) >> 11)],
+
       :AA     => (data[1] & 0x400 != 0),
       :TC     => (data[1] & 0x200 != 0),
       :RD     => (data[1] & 0x100 != 0),
       :RA     => (data[1] & 0x80  != 0),
       :Z      => (data[1] & 0x70  == 0),
-      :RCODE  => (data[1] & 0xf),
+
+      :RCODE  => {
+        0 => :OK,
+        1 => :FORMAT_ERROR,
+        2 => :SERVER_FAILURE,
+        3 => :NAME_ERROR,
+        4 => :NOT_IMPLEMENTED,
+        5 => :REFUSED
+      }[(data[1] & 0xf)],
 
       :QDCOUNT => data[2],
       :ANCOUNT => data[3],
@@ -163,12 +177,16 @@ class Header
 
   def initialize (what)
     if what.is_a? String
-      self.from_hash(Header.parse(what))
+      @data = Header.parse(what)
     elsif what.is_a? Hash
-      self.from_hash(what)
+      @data = what
     else
       raise ArgumentError.new('You have to pass a String or a Hash.')
     end
+  end
+
+  def [] (name)
+    @data[name]
   end
 end
 
