@@ -138,25 +138,23 @@ class Header
   def self.parse (string)
     data = string.unpack('nnnnnn')
 
-    result = {}
+    return {
+      :ID => data[0],
 
-    result[:ID] = data[0]
+      :QR     => (data[1] & 0x8000 != 0) ? :RESPONSE : :QUERY,
+      :OPCODE => { 0 => :QUERY, 1 => :IQUERY, 2 => :STATUS }[((data[1] & 0x7800) >> 11)],
+      :AA     => (data[1] & 0x400 != 0),
+      :TC     => (data[1] & 0x200 != 0),
+      :RD     => (data[1] & 0x100 != 0),
+      :RA     => (data[1] & 0x80  != 0),
+      :Z      => (data[1] & 0x70  == 0),
+      :RCODE  => (data[1] & 0xf),
 
-    result[:QR]     = (data[1] & 0x8000 != 0) ? :RESPONSE : :QUERY
-    result[:OPCODE] = { 0 => :QUERY, 1 => :IQUERY, 2 => :STATUS }[((data[1] & 0x7800) >> 11)]
-    result[:AA]     = (data[1] & 0x400 != 0)
-    result[:TC]     = (data[1] & 0x200 != 0)
-    result[:RD]     = (data[1] & 0x100 != 0)
-    result[:RA]     = (data[1] & 0x80  != 0)
-    result[:Z]      = (data[1] & 0x70  == 0)
-    result[:RCODE]  = (data[1] & 0xf)
-
-    result[:QDCOUNT] = data[2]
-    result[:ANCOUNT] = data[3]
-    result[:NSCOUNT] = data[4]
-    result[:ARCOUNT] = data[5]
-
-    return result
+      :QDCOUNT => data[2],
+      :ANCOUNT => data[3],
+      :NSCOUNT => data[4],
+      :ARCOUNT => data[5]
+    }
   end
 
   def self.length
