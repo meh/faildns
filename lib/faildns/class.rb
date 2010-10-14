@@ -41,6 +41,17 @@ class Class
     4 => :HS
   }
 
+  def self.parse (string)
+    result = Class.new(string.unpack('n').first)
+    string[0, Class.length] = ''
+
+    return result
+  end
+
+  def self.length (string=nil)
+    2
+  end
+
   attr_reader :value
 
   def initialize (value)

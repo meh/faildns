@@ -34,6 +34,13 @@ class QClass < Class
     255 => :ANY
   }
 
+  def self.parse (string)
+    result = QClass.new(string.unpack('n').first)
+    string[0, QClass.length] = ''
+
+    return result
+  end
+
   def initialize (value)
     super(value)
   end

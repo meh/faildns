@@ -78,6 +78,17 @@ class Type
     16 => :TXT
   }
 
+  def self.parse (string)
+    result = Type.new(string.unpack('n').first)
+    string[0, Type.length] = ''
+
+    return result
+  end
+
+  def self.length (string=nil)
+    2
+  end
+
   attr_reader :value
 
   def initialize (value)

@@ -136,7 +136,9 @@ class Header
   def self.parse (string)
     data = string.unpack('nnnnnn')
 
-    return {
+    string[0, Header.length] = ''
+
+    return Header.new(
       :ID => data[0],
 
       :QR => (data[1] & 0x8000 != 0) ? :RESPONSE : :QUERY,
@@ -170,7 +172,7 @@ class Header
       :NSCOUNT => data[4],
 
       :ARCOUNT => data[5]
-    }
+    )
   end
 
   def self.length (string=nil)
@@ -178,13 +180,11 @@ class Header
   end
 
   def initialize (what)
-    if what.is_a? String
-      @data = Header.parse(what)
-    elsif what.is_a? Hash
-      @data = what
-    else
-      raise ArgumentError.new('You have to pass a String or a Hash.')
+    if !what.is_a? Hash
+      raise ArgumentError.new('You have to pass a Hash.')
     end
+
+    @data = what
   end
 
   def [] (name)

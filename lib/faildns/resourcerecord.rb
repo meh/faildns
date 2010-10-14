@@ -73,12 +73,20 @@ module DNS
 #++ 
 
 class ResourceRecord
-  def self.parse (string)
+  def self.parse (string, original)
 
   end
 
   def self.length (string)
 
+  end
+
+  def initialize (what)
+    if !what.is_a? Hash
+      raise ArgumentError.new('You have to pass a Hash.')
+    end
+
+    @data = what
   end
 end
 

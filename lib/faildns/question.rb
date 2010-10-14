@@ -17,6 +17,7 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
+require 'faildns/domainname'
 require 'faildns/qtype'
 require 'faildns/qclass'
 
@@ -58,51 +59,28 @@ module DNS
 #++
 
 class Question
-  def self.parse (string)
-    string = string.clone
+  def self.parse (string, original)
     result = {}
 
-    # Each label is composed of a byte for length (max 67 octects) and the
-    # length bytes, so I get the bytes and then cut out the length + 1 bytes
-    # so we have the next label.
-    #
-    # When the zero label is found it knows that it's finished.
-    result[:QNAME] = []
-    while (length = string.unpack('c').first) != 0 && length <= 67
-      result[:QNAME] << string[1, length]
-      string[0, length + 1] = ''
-    end
+    result[:QNAME]  = DomainName.parse(string, original);
+    result[:QTYPE]  = QType.parse(string);
+    result[:QCLASS] = QClass.parse(string);
 
-    string[0, 1] = ''
-
-    result[:QTYPE]  = QType.new(string.unpack('n').first)
-    result[:QCLASS] = QClass.new(string.unpack('xxn').first)
-
-    return result
+    return Question.new(result)
   end
 
   def self.length (string)
-    string = string.clone
-    result = 0
-
-    while (length = string.unpack('c').first) != 0 && length <= 67
-      result                += 1 + length
-      string[0, length + 1]  = ''
-    end
-
-    result += 1 + 2 + 2
+    DomainName.length(string) + QType.length + QClass.length
 
     return result
   end
 
   def initialize (what)
-    if what.is_a? String
-      @data = Question.parse(what)
-    elsif what.is_a? Hash
-      @data = what
-    else
-      raise ArgumentError.new('You have to pass a String or a Hash.')
+    if !what.is_a? Hash
+      raise ArgumentError.new('You have to pass a Hash.')
     end
+
+    @data = what
   end
 
   def [] (name)
@@ -110,18 +88,7 @@ class Question
   end
 
   def pack
-    result = ''
-
-    self[:QNAME].each {|name|
-      result += [name.length].pack('c') + name
-    }
-
-    result += [0].pack('c')
-
-    result += self[:QTYPE].pack
-    result += self[:QCLASS].pack
-
-    return result
+    self[:QNAME].pack + self[:QTYPE].pack + self[:QCLASS].pack
   end
 end
 

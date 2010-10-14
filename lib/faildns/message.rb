@@ -19,6 +19,7 @@
 
 require 'faildns/header'
 require 'faildns/question'
+require 'faildns/resourcerecord'
 
 module DNS
 
@@ -27,28 +28,29 @@ class Message
 
   def initialize (*args)
     if args.length == 1
-      string = args.shift.clone
+      @original = args.shift
+      string    = @original.clone
 
-      @header = Header.new(string); string[0, Header.length(string)] = ''
+      @header = Header.parse(string);
 
       @questions = []
       1.upto(@header[:QDCOUNT]) {
-        @questions << Question.new(string); string[0, Question.length(string)] = ''
+        @questions << Question.parse(string, @original);
       }
 
       @answers = []
       1.upto(@header[:ANCOUNT]) {
-        @answers << ResourceRecord.new(string); string[0, ResourceRecord.length(string)] = ''
+        @answers << ResourceRecord.parse(string, @original);
       }
 
       @authorities = []
       1.upto(@header[:NSCOUNT]) {
-        @authorities << ResourceRecord.new(string); string[0, ResourceRecord.length(string)] = ''
+        @authorities << ResourceRecord.parse(string, @original);
       }
 
       @additionals = []
       1.upto(@header[:ARCOUNT]) {
-        @additionals << ResourceRecord.new(string); string[0, ResourceRecord.length(string)] = ''
+        @additionals << ResourceRecord.parse(string, @original);
       }
     elsif args.length > 1
       @header, @questions, @answers, @authorities, @additionals = *args

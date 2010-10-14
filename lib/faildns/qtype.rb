@@ -44,6 +44,13 @@ class QType < Type
     255 => :ANY
   }
 
+  def self.parse (string)
+    result = QType.new(string.unpack('n').first)
+    string[0, QType.length] = ''
+
+    return result
+  end
+
   def initialize (value)
     super(value)
   end
