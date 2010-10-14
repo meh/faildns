@@ -79,8 +79,10 @@ class Type
   }
 
   def self.parse (string)
-    result = Type.new(string.unpack('n').first)
-    string[0, Type.length] = ''
+    string.force_encoding 'BINARY'
+
+    result = self.new(string.unpack('n').first)
+    string[0, self.length] = ''
 
     return result
   end

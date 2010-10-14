@@ -42,8 +42,10 @@ class Class
   }
 
   def self.parse (string)
-    result = Class.new(string.unpack('n').first)
-    string[0, Class.length] = ''
+    string.force_encoding 'BINARY'
+
+    result = self.new(string.unpack('n').first)
+    string[0, self.length] = ''
 
     return result
   end

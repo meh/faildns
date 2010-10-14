@@ -130,15 +130,20 @@ module DNS
 
 class DomainName
   def self.pointer (string, offset)
+    string.force_encoding 'BINARY'
+
     return string[offset.unpack('n').first & 0x3FFF, 512]
   end
 
   def self.parse (string, whole)
+    string.force_encoding 'BINARY'
+
     result = ''
 
     case string.unpack('c').first & 0xC0
       when 0xC0
-        result += DomainName.parse(DomainName.pointer(whole, string))
+        result       += DomainName.parse(DomainName.pointer(whole, string), whole)
+        string[0, 2]  = ''
 
       when 0x00
         while (length = string.unpack('c').first) != 0 && (length & 0xC0) == 0
@@ -149,16 +154,20 @@ class DomainName
         if length & 0xC0 == 0xC0
           result += DomainName.parse(string, whole)
 
+          string[0, 2] = ''
+        else
           string[0, 1] = ''
         end
+
+        result[0, 1] = ''
     end
 
-    string[0, 1] = ''
-
-    return result[1, 255]
+    return result
   end
 
   def self.length (string)
+    string.force_encoding 'BINARY'
+
     string = string.clone
     result = 0
 

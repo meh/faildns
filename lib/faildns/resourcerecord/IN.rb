@@ -17,34 +17,5 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/class'
-
-module DNS
-
-#--
-# QCLASS fields appear in the question section of a query.  QCLASS values
-# are a superset of CLASS values; every CLASS is a valid QCLASS.  In
-# addition to CLASS values, the following QCLASSes are defined:
-#
-# *               255 any class
-#++
-
-class QClass < Class
-  Values = {
-    255 => :ANY
-  }
-
-  def initialize (value)
-    super(value)
-  end
-
-  def to_sym
-    Values[@value] || Class::Values[@value]
-  end
-
-  def to_s
-    (Values[@value] || Class::Values[@value]).to_s
-  end
-end
-
-end
+require 'faildns/resourcerecord/IN/A'
+require 'faildns/resourcerecord/IN/NS'

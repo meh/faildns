@@ -17,6 +17,8 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
+require 'faildns/resourcerecord/IN'
+
 module DNS
 
 #--
@@ -74,11 +76,27 @@ module DNS
 
 class ResourceRecord
   def self.parse (string, original)
+    string.force_encoding 'BINARY'
 
+    result = {}
+
+    result[:NAME] = DomainName.parse(string, original)
+
+    result[:TYPE]  = Type.parse(string)
+    result[:CLASS] = Class.parse(string)
+
+    result[:TTL] = string.unpack('N').first; string[0, 4] = ''
+
+    result[:RDLENGTH] = string.unpack('n').first; string[0, 2] = ''
+    result[:RDATA]    = ResourceRecord.const_get(result[:CLASS].to_sym).const_get(result[:TYPE].to_sym).parse(string, result[:RDLENGTH], original);
+
+    ResourceRecord.new(result)
   end
 
   def self.length (string)
+    string.force_encoding 'BINARY'
 
+    (tmp = DomainName.length(string) + Type.length + Class.length + 4) + string[tmp, 2].unpack('n').first + 2
   end
 
   def initialize (what)

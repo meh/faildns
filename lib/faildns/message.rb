@@ -29,7 +29,8 @@ class Message
   def initialize (*args)
     if args.length == 1
       @original = args.shift
-      string    = @original.clone
+      @original.force_encoding 'BINARY'
+      string = @original.clone
 
       @header = Header.parse(string);
 

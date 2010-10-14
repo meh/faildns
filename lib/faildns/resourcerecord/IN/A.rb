@@ -17,34 +17,48 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/class'
+require 'faildns/resourcerecord/data'
 
 module DNS
 
+class ResourceRecord
+
+module IN
+
 #--
-# QCLASS fields appear in the question section of a query.  QCLASS values
-# are a superset of CLASS values; every CLASS is a valid QCLASS.  In
-# addition to CLASS values, the following QCLASSes are defined:
-#
-# *               255 any class
+#     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+#     |                    ADDRESS                    |
+#     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+# 
+# where:
+# 
+# ADDRESS         A 32 bit Internet address.
+# 
+# Hosts that have multiple Internet addresses will have multiple A
+# records.
+# 
+# A records cause no additional section processing.  The RDATA section of
+# an A line in a master file is an Internet address expressed as four
+# decimal numbers separated by dots without any imbedded spaces (e.g.,
+# "10.2.0.52" or "192.0.5.6").
 #++
 
-class QClass < Class
-  Values = {
-    255 => :ANY
-  }
-
-  def initialize (value)
-    super(value)
+class A < Data
+  def initialize (string, original)
+    @raw = string
   end
 
-  def to_sym
-    Values[@value] || Class::Values[@value]
+  def pack
+    @raw
   end
 
   def to_s
-    (Values[@value] || Class::Values[@value]).to_s
+    @raw.unpack('CCCC').join('.')
   end
+end
+
+end
+
 end
 
 end
