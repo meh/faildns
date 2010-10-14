@@ -132,8 +132,6 @@ module DNS
 #                 resource records in the additional records section.
 #++
 
-# "C\x9F\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x03lol\x03com\x00\x00\x01\x00\x01"
-
 class Header
   def self.parse (string)
     data = string.unpack('nnnnnn')
@@ -141,7 +139,7 @@ class Header
     return {
       :ID => data[0],
 
-      :QR     => (data[1] & 0x8000 != 0) ? :RESPONSE : :QUERY,
+      :QR => (data[1] & 0x8000 != 0) ? :RESPONSE : :QUERY,
 
       :OPCODE => {
         0 => :QUERY,
@@ -149,11 +147,12 @@ class Header
         2 => :STATUS
       }[((data[1] & 0x7800) >> 11)],
 
-      :AA     => (data[1] & 0x400 != 0),
-      :TC     => (data[1] & 0x200 != 0),
-      :RD     => (data[1] & 0x100 != 0),
-      :RA     => (data[1] & 0x80  != 0),
-      :Z      => (data[1] & 0x70  == 0),
+      :AA => (data[1] & 0x400 != 0),
+      :TC => (data[1] & 0x200 != 0),
+      :RD => (data[1] & 0x100 != 0),
+      :RA => (data[1] & 0x80  != 0),
+
+      :Z  => (data[1] & 0x70  == 0),
 
       :RCODE  => {
         0 => :OK,
@@ -165,13 +164,16 @@ class Header
       }[(data[1] & 0xf)],
 
       :QDCOUNT => data[2],
+
       :ANCOUNT => data[3],
+
       :NSCOUNT => data[4],
+
       :ARCOUNT => data[5]
     }
   end
 
-  def self.length
+  def self.length (string=nil)
     12
   end
 
