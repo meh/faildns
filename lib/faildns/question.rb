@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
-#+
+#++
 
 module DNS
 
@@ -65,13 +65,13 @@ class Question
     #
     # When the zero label is found it knows that it's finished.
     result[:QNAME] = []
-    while (length = string.unpack('c').first) != 0
+    while (length = string.unpack('c').first) != 0 && length <= 67
       result[:QNAME] << string[1, length]
       string[0, length + 1] = ''
     end
 
-    result[:QTYPE]  = string.unpack('n').first
-    result[:QCLASS] = string.unpack('xn').first
+    result[:QTYPE]  = QType.new(string.unpack('n').first)
+    result[:QCLASS] = QClass.new(string.unpack('xn').first)
 
     return result
   end
@@ -80,7 +80,7 @@ class Question
     string = string.clone
     result = 0
 
-    while (length = string.unpack('c').first) != 0
+    while (length = string.unpack('c').first) != 0 && length <= 67
       result                += 1 + length
       string[0, length + 1]  = ''
     end
