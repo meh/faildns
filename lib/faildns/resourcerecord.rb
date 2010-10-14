@@ -73,7 +73,13 @@ module DNS
 #++ 
 
 class ResourceRecord
+  def self.parse (string)
 
+  end
+
+  def self.length (string)
+
+  end
 end
 
 end

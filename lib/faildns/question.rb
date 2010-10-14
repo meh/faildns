@@ -17,6 +17,9 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
+require 'faildns/qtype'
+require 'faildns/qclass'
+
 module DNS
 
 #--
@@ -70,8 +73,10 @@ class Question
       string[0, length + 1] = ''
     end
 
+    string[0, 1] = ''
+
     result[:QTYPE]  = QType.new(string.unpack('n').first)
-    result[:QCLASS] = QClass.new(string.unpack('xn').first)
+    result[:QCLASS] = QClass.new(string.unpack('xxn').first)
 
     return result
   end
@@ -85,7 +90,7 @@ class Question
       string[0, length + 1]  = ''
     end
 
-    result += 4
+    result += 1 + 2 + 2
 
     return result
   end

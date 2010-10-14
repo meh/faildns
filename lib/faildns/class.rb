@@ -51,7 +51,7 @@ class Class
     end
 
     if !self.to_sym
-      raise ArgumentError.new('The passed value is not a suitable type.')
+      raise ArgumentError.new('The passed value is not a suitable class.')
     end
   end
 
