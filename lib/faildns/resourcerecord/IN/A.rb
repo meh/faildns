@@ -44,16 +44,24 @@ module IN
 #++
 
 class A < Data
-  def initialize (string, original)
-    @raw = string
+  def self._parse (string, original)
+    A.new(string.unpack('N').first)
+  end
+
+  def initialize (what)
+    if what.is_a? String
+      @ip = what
+    elsif what.is_a? Integer
+      @ip = [what].pack('N').unpack('CCCC').join('.')
+    end
   end
 
   def pack
-    @raw
+    [@ip.split('.')].pack('CCCC')
   end
 
   def to_s
-    @raw.unpack('CCCC').join('.')
+    @ip
   end
 end
 

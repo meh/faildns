@@ -49,8 +49,20 @@ class ResourceRecord
 module IN
 
 class NS < Data
-  def initialize (string, original)
+  def self._parse (string, original)
+    NS.new(DomainName.parse(string.clone, original))
+  end
 
+  def initialize (domain)
+    @domain = domain
+  end
+
+  def pack
+    @domain.pack
+  end
+
+  def to_s
+    @domain.to_s
   end
 end
 

@@ -152,7 +152,7 @@ class DomainName
         end
 
         if length & 0xC0 == 0xC0
-          result += DomainName.parse(string, whole)
+          result += '.' + DomainName.parse(string, whole)
 
           string[0, 2] = ''
         else

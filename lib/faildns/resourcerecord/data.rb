@@ -27,13 +27,12 @@ class Data
 
     data = string[0, length]; string[0, length] = ''
 
-    self.new(data, original)
+    self._parse(data, original)
   end
 
   private
 
   def initialize
-
   end
 end
 
