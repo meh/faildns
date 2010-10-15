@@ -1,0 +1,80 @@
+#! /usr/bin/env ruby
+# Copyleft meh. [http://meh.doesntexist.org | meh@paranoici.org]
+#
+# This file is part of faildns.
+#
+# faildns is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published
+# by the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# faildns is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with faildns. If not, see <http://www.gnu.org/licenses/>.
+
+require 'faildns/server'
+require 'optimus'
+
+opt = Optimus.new {|o|
+  o.set(
+    :type => :numeric,
+
+    :long  => 'port',
+    :short => 'p',
+
+    :default => 53
+  )
+}
+
+options = opt.params
+
+server = DNS::Server.new(options)
+
+server.register :input, lambda {|socket, message|
+  puts message.questions.first.inspect
+
+  if message.questions.first.class != :IN && message.questions.first.type != :A
+    return
+  end
+
+  begin
+  socket.send DNS::Message.new(
+    DNS::Header.new(
+      :ID => message.header.id,
+
+      :QR     => :RESPONSE,
+      :OPCODE => :QUERY,
+
+      :AA => false, :TC => false, :RD => false, :RA => false,
+
+      :RCODE => :OK,
+
+      :QDCOUNT => 1,
+      :ANCOUNT => 1,
+      :NSCOUNT => 0,
+      :ARCOUNT => 0
+    ),
+
+    message.questions,
+
+    [DNS::ResourceRecord.new(
+      :NAME  => message.questions.first.name,
+      :TYPE  => DNS::Type.new(:NS),
+      :CLASS => DNS::Class.new(:IN),
+
+      :TTL => 3600,
+
+      :RDLENGTH => DNS::ResourceRecord::IN::A.length,
+      :RDATA    => DNS::ResourceRecord::IN::A.new('1.83.13.37')
+    )]
+  )
+  rescue Exception => e
+    DNS.debug e
+  end
+}
+
+server.start

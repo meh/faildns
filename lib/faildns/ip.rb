@@ -29,7 +29,7 @@ class IP
   end
 
   def pack
-    [@value.split('.')].pack('CCCC')
+    @value.split('.').map{|part| part.to_i}.pack('CCCC')
   end
 
   def to_s

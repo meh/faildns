@@ -17,44 +17,58 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/type'
-
 module DNS
 
-#--
-# QTYPE fields appear in the question part of a query.  QTYPES are a
-# superset of TYPEs, hence all TYPEs are valid QTYPEs.  In addition, the
-# following QTYPEs are defined:
-# 
-# 
-# AXFR            252 A request for a transfer of an entire zone
-# 
-# MAILB           253 A request for mailbox-related records (MB, MG or MR)
-# 
-# MAILA           254 A request for mail agent RRs (Obsolete - see MX)
-# 
-# *               255 A request for all records
-#++
+class Server
 
-class QType < Type
-  Values = {
-    252 => :AXFR,
-    253 => :MAILB,
-    254 => :MAILA,
-    255 => :ANY
-  }
+class Dispatcher
 
-  def initialize (value)
-    super(value)
+class ConnectionDispatcher
+
+class Socket
+  attr_reader :ip, :port, :type
+
+  def initialize (dispatcher, what)
+    @dispatcher = dispatcher
+
+    if what.is_a? TCPSocket
+      @type = :TCP
+      @ip   = what.peeraddr[3]
+      @port = what.addr[1]
+
+      @socket = what
+    else
+      @type = :UDP
+      @ip   = what[3]
+      @port = what[1]
+
+      @socket = UDPSocket.new
+    end
   end
 
-  def to_sym
-    Values[@value] || Type::Values[@value]
+  def send (message)
+    @dispatcher.connection.send message, self
   end
 
-  def to_s
-    (Values[@value] || Type::Values[@value]).to_s
+  def raw (data)
+    if @socket.is_a? TCPSocket
+      @socket.send_nonblock(data)
+    else
+      @socket.send(data, 0, ::Socket.pack_sockaddr_in(@port, @ip))
+    end
   end
+
+  def close
+    if @socket.is_a? TCPSocket
+      @socket.close
+    end
+  end
+end
+
+end
+
+end
+
 end
 
 end

@@ -17,44 +17,31 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/type'
 
 module DNS
 
-#--
-# QTYPE fields appear in the question part of a query.  QTYPES are a
-# superset of TYPEs, hence all TYPEs are valid QTYPEs.  In addition, the
-# following QTYPEs are defined:
-# 
-# 
-# AXFR            252 A request for a transfer of an entire zone
-# 
-# MAILB           253 A request for mailbox-related records (MB, MG or MR)
-# 
-# MAILA           254 A request for mail agent RRs (Obsolete - see MX)
-# 
-# *               255 A request for all records
-#++
+class Server
 
-class QType < Type
-  Values = {
-    252 => :AXFR,
-    253 => :MAILB,
-    254 => :MAILA,
-    255 => :ANY
-  }
+class Dispatcher
 
-  def initialize (value)
-    super(value)
-  end
+class Event
+    class Callback
+        attr_reader :method
+        attr_accessor :priority
 
-  def to_sym
-    Values[@value] || Type::Values[@value]
-  end
+        def initialize (method, priority=0)
+            @method   = method
+            @priority = priority
+        end
 
-  def to_s
-    (Values[@value] || Type::Values[@value]).to_s
-  end
+        def call (*args)
+            return @method.call(*args)
+        end
+    end
+end
+
+end
+
 end
 
 end

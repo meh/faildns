@@ -54,7 +54,7 @@ class Message
         @additionals << ResourceRecord.parse(string, @original);
       }
     elsif args.length > 1
-      @header, @questions, @answers, @authorities, @additionals = *args
+      @header, @questions, @answers, @authorities, @additionals = *(args.concat([[], [], [], []]))
     else
       raise ArgumentError.new('You have to pass at least 1 parameter.')
     end

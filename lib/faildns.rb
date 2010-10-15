@@ -19,7 +19,3 @@
 
 require 'faildns/server'
 require 'faildns/client'
-
-module DNS
-    Version = '0.0.1'
-end

@@ -17,13 +17,50 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
+require 'faildns/common'
+require 'faildns/server/dispatcher'
+
 module DNS
 
 class Server
+  attr_reader :options, :dispatcher
+
   def initialize (options)
     if !options.is_a? Hash
       raise ArgumentError.new('You have to pass a Hash')
     end
+
+    @options = options
+
+    @dispatcher = Dispatcher.new(self)
+  end
+
+  def start
+    if @started
+      return
+    end
+
+    @started = true
+
+    @dispatcher.start
+  end
+
+  def stopping
+    @stopping = true
+
+    @dispatcher.stop
+  end
+
+  def register (*args)
+    @dispatcher.event.register(*args)
+  end
+
+  def observe (*args)
+    @dispatcher.event.observe(*args)
+  end
+
+  def fire (*args)
+    @dispatcher.event.fire(*args)
   end
 end
 

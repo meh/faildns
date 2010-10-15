@@ -18,4 +18,11 @@
 #++
 
 require 'faildns/resourcerecord/IN/A'
+require 'faildns/resourcerecord/IN/CNAME'
+require 'faildns/resourcerecord/IN/HINFO'
+require 'faildns/resourcerecord/IN/MX'
 require 'faildns/resourcerecord/IN/NS'
+require 'faildns/resourcerecord/IN/NULL'
+require 'faildns/resourcerecord/IN/PTR'
+require 'faildns/resourcerecord/IN/SOA'
+require 'faildns/resourcerecord/IN/TXT'

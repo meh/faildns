@@ -87,6 +87,10 @@ class Question
     @data[name]
   end
 
+  def name;  self[:QNAME]  end
+  def type;  self[:QTYPE]  end
+  def class; self[:QCLASS] end
+
   def pack
     self[:QNAME].pack + self[:QTYPE].pack + self[:QCLASS].pack
   end

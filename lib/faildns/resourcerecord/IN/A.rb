@@ -49,6 +49,10 @@ class A < Data
     A.new(string.unpack('N').first)
   end
 
+  def self.length
+    4
+  end
+
   attr_reader :ip
 
   def initialize (what)

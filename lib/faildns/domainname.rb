@@ -162,7 +162,7 @@ class DomainName
         result[0, 1] = ''
     end
 
-    return result
+    DomainName.new result
   end
 
   def self.length (string)

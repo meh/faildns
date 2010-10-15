@@ -106,6 +106,22 @@ class ResourceRecord
 
     @data = what
   end
+
+  def [] (name)
+    @data[name]
+  end
+
+  def name;   self[:NAME]     end
+  def type;   self[:TYPE]     end
+  def class;  self[:CLASS]    end
+  def ttl;    self[:TTL]      end
+  def length; self[:RDLENGTH] end
+  def data;   self[:RDATA]    end
+
+  def pack
+    self.name.pack + self.type.pack + self.class.pack + [self.ttl].pack('N') +
+    [self.length].pack('n') + self.data.pack
+  end
 end
 
 end

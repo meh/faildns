@@ -109,6 +109,14 @@ class Type
     [@value].pack('n')
   end
 
+  def == (what)
+    if what.is_a? Symbol
+      self.to_sym == what
+    else
+      @value == what
+    end
+  end
+
   def to_sym
     Values[@value]
   end

@@ -191,6 +191,19 @@ class Header
     @data[name]
   end
 
+  def id;             self[:ID]       end
+  def type;           self[:QR]       end
+  def class;          self[:OPCODE]   end
+  def authoritative?; self[:AA];      end
+  def truncated?;     self[:TC];      end
+  def recursive?;     self[:RD];      end
+  def recursive!;     self[:RA];      end
+  def status;         self[:RCODE];   end
+  def questions;      self[:QDCOUNT]; end
+  def answers;        self[:ANCOUNT]; end
+  def authorities;    self[:NSCOUNT]; end
+  def additionals;    self[:ARCOUNT]; end
+
   def pack
     [
       self[:ID],
