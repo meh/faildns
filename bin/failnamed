@@ -18,6 +18,7 @@
 
 require 'faildns/server'
 require 'optimus'
+require 'rexml/document'
 
 opt = Optimus.new {|o|
   o.set(
@@ -28,20 +29,28 @@ opt = Optimus.new {|o|
 
     :default => 53
   )
+
+  o.set(
+    :type => :string,
+
+    :long  => 'configuration',
+    :short => 'c'
+  )
 }
+
+config = REXML::Document.new(File.new(opt.params[:c]))
 
 options = opt.params
 
 server = DNS::Server.new(options)
 
 server.register :input, lambda {|socket, message|
-  puts message.questions.first.inspect
-
   if message.questions.first.class != :IN && message.questions.first.type != :A
     return
   end
 
   begin
+
   socket.send DNS::Message.new(
     DNS::Header.new(
       :ID => message.header.id,
@@ -53,25 +62,45 @@ server.register :input, lambda {|socket, message|
 
       :RCODE => :OK,
 
-      :QDCOUNT => 1,
-      :ANCOUNT => 1,
+      :QDCOUNT => message.questions.length,
+      :ANCOUNT => message.questions.length,
       :NSCOUNT => 0,
       :ARCOUNT => 0
     ),
 
     message.questions,
 
-    [DNS::ResourceRecord.new(
-      :NAME  => message.questions.first.name,
-      :TYPE  => DNS::Type.new(:NS),
-      :CLASS => DNS::Class.new(:IN),
+    message.questions.map {|question|
+      ip = '0.0.0.0'
 
-      :TTL => 3600,
+      config.elements.each('//domain') {|domain|
+        case domain.attributes['type']
+          when 'regexp'
+            if question.name.to_s.match(Regexp.new(domain.attributes['matches']))
+              ip = domain.text
+              break
+            end
 
-      :RDLENGTH => DNS::ResourceRecord::IN::A.length,
-      :RDATA    => DNS::ResourceRecord::IN::A.new('1.83.13.37')
-    )]
+          else
+            if question.name.to_s.match(Regexp.new(Regexp.escape(domain.attributes['matches']).gsub(/\*/, '.*').gsub(/\?/, '.')))
+              ip = domain.text
+            end
+        end
+      }
+
+      DNS::ResourceRecord.new(
+        :NAME  => question.name,
+        :TYPE  => DNS::Type.new(:A),
+        :CLASS => DNS::Class.new(:IN),
+
+        :TTL => 3600,
+
+        :RDLENGTH => DNS::ResourceRecord::IN::A.length,
+        :RDATA    => DNS::ResourceRecord::IN::A.new(ip)
+      )
+    }
   )
+
   rescue Exception => e
     DNS.debug e
   end
