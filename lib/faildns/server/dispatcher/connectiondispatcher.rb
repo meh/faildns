@@ -30,7 +30,7 @@ class Server
 class Dispatcher
 
 class ConnectionDispatcher
-  attr_reader :server, :dispatcher
+  attr_reader :server, :dispatcher, :listening
 
   def initialize (dispatcher)
     @server     = dispatcher.server
