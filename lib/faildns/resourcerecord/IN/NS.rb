@@ -19,7 +19,13 @@
 
 require 'faildns/resourcerecord/data'
 
+require 'faildns/domainname'
+
 module DNS
+
+class ResourceRecord
+
+module IN
 
 #--
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -44,14 +50,12 @@ module DNS
 # class information are normally queried using IN class protocols.
 #++
 
-class ResourceRecord
-
-module IN
-
 class NS < Data
   def self._parse (string, original)
     NS.new(DomainName.parse(string.clone, original))
   end
+
+  attr_reader :domain
 
   def initialize (domain)
     @domain = domain

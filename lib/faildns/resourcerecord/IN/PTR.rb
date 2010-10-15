@@ -18,7 +18,6 @@
 #++
 
 require 'faildns/resourcerecord/data'
-require 'faildns/ip'
 
 module DNS
 
@@ -28,39 +27,38 @@ module IN
 
 #--
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-#     |                    ADDRESS                    |
+#     /                   PTRDNAME                    /
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 # 
 # where:
 # 
-# ADDRESS         A 32 bit Internet address.
+# PTRDNAME        A <domain-name> which points to some location in the
+#                 domain name space.
 # 
-# Hosts that have multiple Internet addresses will have multiple A
-# records.
-# 
-# A records cause no additional section processing.  The RDATA section of
-# an A line in a master file is an Internet address expressed as four
-# decimal numbers separated by dots without any imbedded spaces (e.g.,
-# "10.2.0.52" or "192.0.5.6").
+# PTR records cause no additional section processing.  These RRs are used
+# in special domains to point to some other location in the domain space.
+# These records are simple data, and don't imply any special processing
+# similar to that performed by CNAME, which identifies aliases.  See the
+# description of the IN-ADDR.ARPA domain for an example.
 #++
 
-class A < Data
+class PTR < Data
   def self._parse (string, original)
-    A.new(string.unpack('N').first)
+    PTR.new(DomainName.parse(string.clone, original))
   end
 
-  attr_reader :ip
+  attr_reader :domain
 
-  def initialize (what)
-    @ip = IP.new(what)
+  def initialize (domain)
+    @domain = domain
   end
 
   def pack
-    @ip.pack
+    @domain.pack
   end
 
   def to_s
-    @ip.to_s
+    @domain.to_s
   end
 end
 

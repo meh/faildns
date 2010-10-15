@@ -191,7 +191,7 @@ class DomainName
 
   attr_accessor :domain
 
-  def initialize (string)
+  def initialize (domain)
     @domain = domain
   end
 

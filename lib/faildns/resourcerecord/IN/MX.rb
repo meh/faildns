@@ -18,7 +18,6 @@
 #++
 
 require 'faildns/resourcerecord/data'
-require 'faildns/ip'
 
 module DNS
 
@@ -28,39 +27,44 @@ module IN
 
 #--
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-#     |                    ADDRESS                    |
+#     |                  PREFERENCE                   |
+#     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+#     /                   EXCHANGE                    /
+#     /                                               /
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 # 
 # where:
 # 
-# ADDRESS         A 32 bit Internet address.
+# PREFERENCE      A 16 bit integer which specifies the preference given to
+#                 this RR among others at the same owner.  Lower values
+#                 are preferred.
 # 
-# Hosts that have multiple Internet addresses will have multiple A
-# records.
+# EXCHANGE        A <domain-name> which specifies a host willing to act as
+#                 a mail exchange for the owner name.
 # 
-# A records cause no additional section processing.  The RDATA section of
-# an A line in a master file is an Internet address expressed as four
-# decimal numbers separated by dots without any imbedded spaces (e.g.,
-# "10.2.0.52" or "192.0.5.6").
+# MX records cause type A additional section processing for the host
+# specified by EXCHANGE.  The use of MX RRs is explained in detail in
+# [RFC-974].
 #++
 
-class A < Data
+class MX < Data
   def self._parse (string, original)
-    A.new(string.unpack('N').first)
+    MX.new(string.unpack('n'), DomainName.parse(string[2, 255], original))
   end
 
-  attr_reader :ip
+  attr_reader :preference, :exchange
 
-  def initialize (what)
-    @ip = IP.new(what)
+  def initialize (preference, exchange)
+    @preference = preference
+    @exchange   = exchange
   end
 
   def pack
-    @ip.pack
+    [@preference].pack('n') + @exchange.pack
   end
 
   def to_s
-    @ip.to_s
+    "#{@preference}) #{@exchange}"
   end
 end
 

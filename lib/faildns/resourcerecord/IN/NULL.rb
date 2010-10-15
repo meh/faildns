@@ -18,7 +18,6 @@
 #++
 
 require 'faildns/resourcerecord/data'
-require 'faildns/ip'
 
 module DNS
 
@@ -28,39 +27,35 @@ module IN
 
 #--
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-#     |                    ADDRESS                    |
+#     /                  <anything>                   /
+#     /                                               /
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 # 
-# where:
+# Anything at all may be in the RDATA field so long as it is 65535 octets
+# or less.
 # 
-# ADDRESS         A 32 bit Internet address.
-# 
-# Hosts that have multiple Internet addresses will have multiple A
-# records.
-# 
-# A records cause no additional section processing.  The RDATA section of
-# an A line in a master file is an Internet address expressed as four
-# decimal numbers separated by dots without any imbedded spaces (e.g.,
-# "10.2.0.52" or "192.0.5.6").
+# NULL records cause no additional section processing.  NULL RRs are not
+# allowed in master files.  NULLs are used as placeholders in some
+# experimental extensions of the DNS.
 #++
 
-class A < Data
+class NULL < Data
   def self._parse (string, original)
-    A.new(string.unpack('N').first)
+    NULL.new(string)
   end
 
-  attr_reader :ip
+  attr_reader :raw
 
-  def initialize (what)
-    @ip = IP.new(what)
+  def initialize (raw)
+    @raw = raw
   end
 
   def pack
-    @ip.pack
+    @raw
   end
 
   def to_s
-    @ip.to_s
+    @raw
   end
 end
 

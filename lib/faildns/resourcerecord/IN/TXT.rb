@@ -18,7 +18,6 @@
 #++
 
 require 'faildns/resourcerecord/data'
-require 'faildns/ip'
 
 module DNS
 
@@ -28,39 +27,32 @@ module IN
 
 #--
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-#     |                    ADDRESS                    |
+#     /                   TXT-DATA                    /
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 # 
 # where:
 # 
-# ADDRESS         A 32 bit Internet address.
+# TXT-DATA        One or more <character-string>s.
 # 
-# Hosts that have multiple Internet addresses will have multiple A
-# records.
-# 
-# A records cause no additional section processing.  The RDATA section of
-# an A line in a master file is an Internet address expressed as four
-# decimal numbers separated by dots without any imbedded spaces (e.g.,
-# "10.2.0.52" or "192.0.5.6").
+# TXT RRs are used to hold descriptive text.  The semantics of the text
+# depends on the domain where it is found.
 #++
 
-class A < Data
+class TXT < Data
   def self._parse (string, original)
-    A.new(string.unpack('N').first)
+    data = []
+
+    while !string.empty?
+      data.push(string[1, (tmp = string.unpack('C'))]); string[0, tmp + 1] = ''
+    end
+
+    TXT.new(data)
   end
 
-  attr_reader :ip
+  attr_reader :data
 
-  def initialize (what)
-    @ip = IP.new(what)
-  end
-
-  def pack
-    @ip.pack
-  end
-
-  def to_s
-    @ip.to_s
+  def initialize (data)
+    @data = data
   end
 end
 

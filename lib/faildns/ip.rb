@@ -17,55 +17,24 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/resourcerecord/data'
-require 'faildns/ip'
-
 module DNS
 
-class ResourceRecord
-
-module IN
-
-#--
-#     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-#     |                    ADDRESS                    |
-#     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-# 
-# where:
-# 
-# ADDRESS         A 32 bit Internet address.
-# 
-# Hosts that have multiple Internet addresses will have multiple A
-# records.
-# 
-# A records cause no additional section processing.  The RDATA section of
-# an A line in a master file is an Internet address expressed as four
-# decimal numbers separated by dots without any imbedded spaces (e.g.,
-# "10.2.0.52" or "192.0.5.6").
-#++
-
-class A < Data
-  def self._parse (string, original)
-    A.new(string.unpack('N').first)
-  end
-
-  attr_reader :ip
-
+class IP
   def initialize (what)
-    @ip = IP.new(what)
+    if what.is_a? String
+      @value = what
+    elsif what.is_a? Integer
+      @value = [what].pack('N').unpack('CCCC').join('.')
+    end
   end
 
   def pack
-    @ip.pack
+    [@value.split('.')].pack('CCCC')
   end
 
   def to_s
-    @ip.to_s
+    @value
   end
-end
-
-end
-
 end
 
 end

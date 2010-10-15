@@ -18,7 +18,6 @@
 #++
 
 require 'faildns/resourcerecord/data'
-require 'faildns/ip'
 
 module DNS
 
@@ -28,39 +27,48 @@ module IN
 
 #--
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-#     |                    ADDRESS                    |
+#     /                      CPU                      /
+#     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+#     /                       OS                      /
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 # 
 # where:
 # 
-# ADDRESS         A 32 bit Internet address.
+# CPU             A <character-string> which specifies the CPU type.
 # 
-# Hosts that have multiple Internet addresses will have multiple A
-# records.
+# OS              A <character-string> which specifies the operating
+#                 system type.
 # 
-# A records cause no additional section processing.  The RDATA section of
-# an A line in a master file is an Internet address expressed as four
-# decimal numbers separated by dots without any imbedded spaces (e.g.,
-# "10.2.0.52" or "192.0.5.6").
+# Standard values for CPU and OS can be found in [RFC-1010].
+# 
+# HINFO records are used to acquire general information about a host.  The
+# main use is for protocols such as FTP that can use special procedures
+# when talking between machines or operating systems of the same type.
 #++
 
-class A < Data
+class HINFO < Data
   def self._parse (string, original)
-    A.new(string.unpack('N').first)
+    string = string.clone
+
+    cpu = string[1, (tmp = string.unpack('C'))]; string[0, tmp + 1] = ''
+    os  = string[1, string.unpack('C')]
+
+    HINFO.new(cpu, os)
   end
 
-  attr_reader :ip
+  attr_reader :cpu, :os
 
-  def initialize (what)
-    @ip = IP.new(what)
+  def initialize (cpu, os)
+    @cpu = cpu
+    @os  = os
   end
 
   def pack
-    @ip.pack
+    [@cpu.length].unpack('C') + @cpu + [@os.length].unpack('C') + @os
   end
 
   def to_s
-    @ip.to_s
+    "#{@os} on #{@cpu}"
   end
 end
 
