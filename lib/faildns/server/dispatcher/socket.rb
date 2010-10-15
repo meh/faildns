@@ -43,6 +43,7 @@ class Socket
       @port = what[1]
 
       @socket = UDPSocket.new
+      @socket.connect(@ip, @port)
     end
   end
 
@@ -54,7 +55,7 @@ class Socket
     if @socket.is_a? TCPSocket
       @socket.send_nonblock(data)
     else
-      @socket.send(data, 0, ::Socket.pack_sockaddr_in(@port, @ip))
+      @socket.send(data, 0)
     end
   end
 
