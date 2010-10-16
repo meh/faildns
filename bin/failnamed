@@ -33,88 +33,104 @@ opt = Optimus.new {|o|
   o.set(
     :type => :string,
 
+    :long  => 'host',
+    :short => 'h',
+
+    :default => '0.0.0.0'
+  )
+
+  o.set(
+    :type => :string,
+
     :long  => 'configuration',
     :short => 'c'
   )
 }
 
-config = REXML::Document.new(File.new(opt.params[:c]))
+$config  = REXML::Document.new(File.new(opt.params[:c]))
+$options = opt.params
+$server  = DNS::Server.new($options)
 
-options = opt.params
+module Commands
+  module IN
+    def self.A (message)
+      question = message.questions.first
 
-server = DNS::Server.new(options)
-
-server.register :input, lambda {|socket, message|
-  if message.questions.first.class != :IN && message.questions.first.type != :A
-    return
-  end
-
-  question = message.questions.first
-
-
-  ip = nil
-  config.elements.each('//domain') {|domain|
-    case domain.attributes['type']
-      when 'regexp'
-        if question.name.to_s.match(Regexp.new(domain.attributes['matches']))
-          ip = domain.text
-          break
+      ip = nil
+      $config.elements.each('//domain') {|domain|
+        case domain.attributes['type']
+          when 'regexp'
+            if question.name.to_s.match(Regexp.new(domain.attributes['matches']))
+              ip = domain.text
+              break
+            end
+    
+          else
+            if question.name.to_s.match(Regexp.new('^' + Regexp.escape(domain.attributes['matches']).gsub(/\\\*/, '.*').gsub(/\\\?/, '.') + '$'))
+              ip = domain.text
+            end
         end
-
-      else
-        if question.name.to_s.match(Regexp.new('^' + Regexp.escape(domain.attributes['matches']).gsub(/\\\*/, '.*').gsub(/\\\?/, '.') + '$'))
-          ip = domain.text
-        end
-    end
-  }
-
-  if !ip
-    socket.send DNS::Message.new(
-      DNS::Header.new {|h|
-        h.id = message.header.id
-
-        h.type  = :RESPONSE
-        h.class = :QUERY
-
-        h.status = :NXDOMAIN
-
-        h.questions = 1
-      },
-
-      [question]
-    )
-
-    return
-  end
-
-  socket.send DNS::Message.new(
-    DNS::Header.new {|h|
-      h.id = message.header.id
-
-      h.type  = :RESPONSE
-      h.class = :QUERY
-
-      h.status = :NOERROR
-
-      h.questions = 1
-      h.answers   = 1
-    },
-
-    [question],
-
-    [question].map {|question|
-      DNS::ResourceRecord.new {|r|
-        r.name  = question.name
-        r.type  = :A
-        r.class = :IN
-
-        r.ttl = 3600
-
-        r.length = DNS::ResourceRecord::IN::A.length
-        r.data   = DNS::ResourceRecord::IN::A.new(ip)
       }
-    }
-  )
+    
+      if !ip
+        return DNS::Message.new(
+          DNS::Header.new {|h|
+            h.id = message.header.id
+    
+            h.type  = :RESPONSE
+            h.class = :QUERY
+    
+            h.status = :NXDOMAIN
+    
+            h.questions = 1
+          },
+    
+          [question]
+        )
+      end
+    
+      return DNS::Message.new(
+        DNS::Header.new {|h|
+          h.id = message.header.id
+    
+          h.type  = :RESPONSE
+          h.class = :QUERY
+    
+          h.status = :NOERROR
+    
+          h.questions = 1
+          h.answers   = 1
+        },
+    
+        [question],
+    
+        [question].map {|question|
+          DNS::ResourceRecord.new {|r|
+            r.name  = question.name
+            r.type  = :A
+            r.class = :IN
+    
+            r.ttl = 3600
+    
+            r.length = DNS::ResourceRecord::IN::A.length
+            r.data   = DNS::ResourceRecord::IN::A.new(ip)
+          }
+        }
+      )
+    end
+  end
+end
+
+$server.register :input, lambda {|socket, message|
+  question = message.questions.first
+  method   = Commands.const_get(question.class.to_sym).method(question.type.to_sym) rescue nil
+
+  if !method
+    DNS.debug 'Not implemented yet.'
+    return
+  end
+
+  socket.send method.call(message)
 }
 
-server.start
+$server.start
