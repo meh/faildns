@@ -49,6 +49,23 @@ class Socket
   def send (message, close=true)
     @dispatcher.dispatch :output, self, message
 
+    if @type == :UDP && message.pack.length > 512
+      [message.additionals, message.authorities, message.answers, message.questions].each {|rr|
+        while (tmp = message.pack).length > 512 && r.pop; end
+
+        if tmp.length <= 512
+          break
+        end
+      }
+
+      message.header.questions   = message.questions.length
+      message.header.answers     = message.answers.length
+      message.header.authorities = message.authorities.length
+      message.header.additionals = message.additionals.length
+
+      message.header.truncated!
+    end
+
     if @socket.is_a? TCPSocket
       @socket.send_nonblock(message.pack)
 
