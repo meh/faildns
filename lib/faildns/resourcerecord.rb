@@ -88,14 +88,14 @@ class ResourceRecord
       r.length = string.unpack('n').first; string[0, 2] = ''
       r.data   = ResourceRecord.const_get(r.class.to_sym).const_get(r.type.to_sym) rescue nil
 
-      DNS.debug r.data.inspect, { :level => 2 }
-      
-      if r.data
-        r.data = r.data.parse(string, r.length, original)
-      else
-        string[0, r.length] = ''
+      if !r.data
+        r.data = ResourceRecord.const_get(r.class.to_sym).const_get(:NULL)
         DNS.debug "ResourceRecord::#{r.class}::#{r.type} not found."
       end
+
+      DNS.debug r.data.inspect, { :level => 2 }
+      
+      r.data = r.data.parse(string, r.length, original)
     }
   end
 

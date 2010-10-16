@@ -48,41 +48,82 @@ opt = Optimus.new {|o|
   )
 }
 
-$config  = REXML::Document.new(File.new(opt.params[:c]))
-$options = {
-    :host => ($config.elements.each('//bind/host') {}.first.text rescue nil) || opt.params[:host],
-    :port => ($config.elements.each('//bind/port') {}.first.text rescue nil) || opt.params[:port]
-}
-$server  = DNS::Server.new($options)
+$config = REXML::Document.new(File.new(opt.params[:c]))
 
-$client  = DNS::Client.new {|c|
+$server = DNS::Server.new {|s|
+    s.options[:host] = ($config.elements.each('//bind/host') {}.first.text rescue nil) || opt.params[:host]
+    s.options[:port] = ($config.elements.each('//bind/port') {}.first.text rescue nil) || opt.params[:port]
+}
+
+$client = DNS::Client.new {|c|
   $config.elements.each('//servers/server') {|server|
     c.servers.push server.text
   }
 }
 
+$options = {}
+
+class Domain
+  attr_accessor :type, :matches, :location
+
+  def initialize
+    if block_given?
+      yield self
+    end
+
+    self.normalize
+  end
+
+  def match (domain)
+    domain.to_s.match(@regexp)
+  end
+
+  def normalize
+    case @type
+      when 'regexp'
+        @regexp = Regexp.new(@matches)
+
+      else
+        @regexp = Regexp.new('^' + Regexp.escape(@matches).gsub(/\\\*/, '.*').gsub(/\\\?/, '.') + '$')
+    end
+  end
+end
+
+$options[:domains] = []
+
+$config.elements.each('//domains/domain') {|domain|
+  $options[:domains].push Domain.new {|d|
+    d.type     = domain.attributes['type']
+    d.matches  = domain.attributes['matches']
+    d.location = domain.text.strip
+  }
+}
+    
 module Commands
   module IN
     def self.A (message)
       question = message.questions.first
 
-      ip = nil
-      $config.elements.each('//domain') {|domain|
-        case domain.attributes['type']
-          when 'regexp'
-            if question.name.to_s.match(Regexp.new(domain.attributes['matches']))
-              ip = domain.text
-              break
-            end
-    
+      ip = $options[:domains].find {|domain|
+        domain.match(question.name)
+      }.location rescue nil
+
+      if !ip
+        ip = $client.resolve(question.name)
+      else
+        # if it's not an IP but a domain, do magic
+        if !(IPAddr.new(ip) rescue false)
+          tmp = $options[:domains].find {|domain|
+            domain.match(ip)
+          }
+          
+          if !tmp
+            ip = $client.resolve(ip)
           else
-            if question.name.to_s.match(Regexp.new('^' + Regexp.escape(domain.attributes['matches']).gsub(/\\\*/, '.*').gsub(/\\\?/, '.') + '$'))
-              ip = domain.text
-            end
+            ip = tmp.location
+          end
         end
-      }
-    
-      ip = $client.resolve(question.name) if !ip
+      end
 
       if !ip
         return DNS::Message.new(

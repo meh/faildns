@@ -25,7 +25,7 @@ module DNS
 class Server
   attr_reader :options, :dispatcher
 
-  def initialize (options)
+  def initialize (options={})
     if !options.is_a? Hash
       raise ArgumentError.new('You have to pass a Hash')
     end

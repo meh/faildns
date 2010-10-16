@@ -46,10 +46,15 @@ class Socket
     end
   end
 
-  def send (message)
+  def send (message, close=true)
+    @dispatcher.dispatch :output, self, message
+
     if @socket.is_a? TCPSocket
       @socket.send_nonblock(message.pack)
-      @socket.close
+
+      if close
+        @socket.close
+      end
     else
       @socket.send(message.pack, 0, ::Socket.pack_sockaddr_in(@port, @ip))
     end

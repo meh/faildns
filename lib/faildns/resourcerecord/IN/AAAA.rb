@@ -33,24 +33,26 @@ module IN
 # 
 # where:
 # 
-# ADDRESS         A 32 bit Internet address.
+# ADDRESS         A 128 bit Internet address.
 # 
-# Hosts that have multiple Internet addresses will have multiple A
+# Hosts that have multiple Internet addresses will have multiple AAAA
 # records.
 # 
-# A records cause no additional section processing.  The RDATA section of
-# an A line in a master file is an Internet address expressed as four
-# decimal numbers separated by dots without any imbedded spaces (e.g.,
-# "10.2.0.52" or "192.0.5.6").
+# AAAA records cause no additional section processing.  The RDATA section of
+# an AAAA line in a master file is an Internet address expressed as a name in 
+# the IP6.ARPA domain by a sequence of nibbles separated by dots with the suffix
+# ".IP6.ARPA". The sequence of nibbles is encoded in reverse order, i.e., the
+# low-order nibble is encoded first, followed by the next low-order
+# nibble and so on.  Each nibble is represented by a hexadecimal digit.
 #++
 
-class A < Data
+class AAAA < Data
   def self._parse (string, original)
-    A.new(IP.parse(string))
+    AAAA.new(IP.parse(string))
   end
 
   def self.length
-    4
+    16
   end
 
   attr_reader :ip
