@@ -96,8 +96,10 @@ class Type
   def initialize (value)
     if value.is_a? Symbol
       @value = Values.find {|key, val| val == value}.first rescue nil
-    else
+    elsif value.is_a? Integer
       @value = value
+    else
+      @value = value.value rescue nil
     end
 
     if !self.to_sym
@@ -112,8 +114,10 @@ class Type
   def == (what)
     if what.is_a? Symbol
       self.to_sym == what
-    else
+    elsif value.is_a? Integer
       @value == what
+    else
+      @value == what.value rescue false
     end
   end
 

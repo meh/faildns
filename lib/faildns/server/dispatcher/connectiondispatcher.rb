@@ -86,7 +86,7 @@ class ConnectionDispatcher
     while input = @input.shift
       Thread.new(input) {|input|
         begin
-          @dispatcher.dispatch :input, Socket.new(@dispatcher, input[1]), Message.new(input[0])
+          @dispatcher.dispatch :input, Socket.new(@dispatcher, input[1]), Message.parse(input[0])
         rescue Exception => e
           DNS.debug e
         end

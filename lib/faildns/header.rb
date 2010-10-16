@@ -17,6 +17,9 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
+require 'faildns/header/opcode'
+require 'faildns/header/status'
+
 module DNS
 
 #--
@@ -133,6 +136,15 @@ module DNS
 #++
 
 class Header
+  @@default = {
+    :AA => false, :TC => false, :RD => false, :RA => false,
+
+    :QDCOUNT => 0,
+    :ANCOUNT => 0,
+    :NSCOUNT => 0,
+    :ARCOUNT => 0
+  }
+
   def self.parse (string)
     data = string.unpack('nnnnnn')
 
@@ -143,11 +155,7 @@ class Header
 
       :QR => (data[1] & 0x8000 != 0) ? :RESPONSE : :QUERY,
 
-      :OPCODE => {
-        0 => :QUERY,
-        1 => :IQUERY,
-        2 => :STATUS
-      }[((data[1] & 0x7800) >> 11)],
+      :OPCODE => Opcode.new((data[1] & 0x7800) >> 11),
 
       :AA => (data[1] & 0x400 != 0),
       :TC => (data[1] & 0x200 != 0),
@@ -156,14 +164,7 @@ class Header
 
       :Z  => (data[1] & 0x70  == 0),
 
-      :RCODE  => {
-        0 => :OK,
-        1 => :FORMAT_ERROR,
-        2 => :SERVER_FAILURE,
-        3 => :NAME_ERROR,
-        4 => :NOT_IMPLEMENTED,
-        5 => :REFUSED
-      }[(data[1] & 0xf)],
+      :RCODE  => Status.new(data[1] & 0xf),
 
       :QDCOUNT => data[2],
 
@@ -179,59 +180,64 @@ class Header
     12
   end
 
-  def initialize (what)
+  def initialize (what={})
     if !what.is_a? Hash
       raise ArgumentError.new('You have to pass a Hash.')
     end
 
-    @data = what
+    @data = @@default.merge(what)
+
+    if block_given?
+      yield self
+    end
   end
 
-  def [] (name)
-    @data[name]
-  end
+  def id;             @data[:ID]      end
+  def type;           @data[:QR]      end
+  def class;          @data[:OPCODE]  end
+  def authoritative?; @data[:AA]      end
+  def truncated?;     @data[:TC]      end
+  def recursive?;     @data[:RD]      end
+  def recursivable?;  @data[:RA]      end
+  def status;         @data[:RCODE]   end
+  def questions;      @data[:QDCOUNT] end
+  def answers;        @data[:ANCOUNT] end
+  def authorities;    @data[:NSCOUNT] end
+  def additionals;    @data[:ARCOUNT] end
 
-  def id;             self[:ID]       end
-  def type;           self[:QR]       end
-  def class;          self[:OPCODE]   end
-  def authoritative?; self[:AA];      end
-  def truncated?;     self[:TC];      end
-  def recursive?;     self[:RD];      end
-  def recursive!;     self[:RA];      end
-  def status;         self[:RCODE];   end
-  def questions;      self[:QDCOUNT]; end
-  def answers;        self[:ANCOUNT]; end
-  def authorities;    self[:NSCOUNT]; end
-  def additionals;    self[:ARCOUNT]; end
+  def id= (val);          @data[:ID]      = val             end
+  def type= (val);        @data[:QR]      = val             end
+  def class= (val);       @data[:OPCODE]  = Opcode.new(val) end
+  def authoritative!;     @data[:AA]      = true            end
+  def truncated!;         @data[:TC]      = true            end
+  def recursive!;         @data[:RD]      = true            end
+  def recursivable!;      @data[:RA]      = true            end
+  def not_authoritative!; @data[:AA]      = false           end
+  def not_truncated!;     @data[:TC]      = false           end
+  def not_recursive!;     @data[:RD]      = false           end
+  def not_recursivable!;  @data[:RA]      = false           end
+  def status= (val);      @data[:RCODE]   = Status.new(val) end
+  def questions= (val);   @data[:QDCOUNT] = val             end
+  def answers= (val);     @data[:ANCOUNT] = val             end
+  def authorities= (val); @data[:NSCOUNT] = val             end
+  def additionals= (val); @data[:ARCOUNT] = val             end
 
   def pack
     [
-      self[:ID],
+      self.id,
 
-      ( ((self[:QR] == :RESPONSE) ? 1 << 15 : 0) \
-      | ((tmp = {
-          :QUERY  => 0,
-          :IQUERY => 1,
-          :STATUS => 2
-        }[self[:OPCODE]]) ? tmp << 14 : 0) \
-      | ((self[:AA]) ? 1 << 10 : 0) \
-      | ((self[:TC]) ? 1 << 9  : 0) \
-      | ((self[:RD]) ? 1 << 8  : 0) \
-      | ((self[:RA]) ? 1 << 7  : 0) \
-      | ((tmp = {
-          :OK              => 0,
-          :FORMAT_ERROR    => 1,
-          :SERVER_FAILURE  => 2,
-          :NAME_ERROR      => 3,
-          :NOT_IMPLEMENTED => 4,
-          :REFUSED         => 5
-        }[self[:RCODE]]) ? tmp : 0)
-      ),
+      ( (self.type == :RESPONSE) ? (1 << 15) : 0 \
+      | (self.class.value << 14) \
+      | (self.authoritative?) ? (1 << 10) : 0 \
+      | (self.truncated?) ? (1 << 9) : 0 \
+      | (self.recursive?) ? (1 << 8) : 0 \
+      | (self.recursivable?) ? (1 << 7) : 0 \
+      | (self.status.value)),
 
-      self[:QDCOUNT],
-      self[:ANCOUNT],
-      self[:NSCOUNT],
-      self[:ARCOUNT]
+      self.questions,
+      self.answers,
+      self.authorities,
+      self.additionals
     ].pack('nnnnnn')
   end
 end

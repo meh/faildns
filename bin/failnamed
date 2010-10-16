@@ -49,61 +49,72 @@ server.register :input, lambda {|socket, message|
     return
   end
 
-  begin
+  ip = nil
+
+  question = message.questions.first
+
+  config.elements.each('//domain') {|domain|
+    case domain.attributes['type']
+      when 'regexp'
+        if question.name.to_s.match(Regexp.new(domain.attributes['matches']))
+          ip = domain.text
+          break
+        end
+
+      else
+        if question.name.to_s.match(Regexp.new('^' + Regexp.escape(domain.attributes['matches']).gsub(/\\\*/, '.*').gsub(/\\\?/, '.') + '$'))
+          ip = domain.text
+        end
+    end
+  }
+
+  if !ip
+    socket.send DNS::Message.new(
+      DNS::Header.new {|h|
+        h.id = message.header.id
+
+        h.type  = :RESPONSE
+        h.class = :QUERY
+
+        h.status = :NXDOMAIN
+
+        h.questions = 1
+      },
+
+      [question]
+    )
+
+    return
+  end
 
   socket.send DNS::Message.new(
-    DNS::Header.new(
-      :ID => message.header.id,
+    DNS::Header.new {|h|
+      h.id = message.header.id
 
-      :QR     => :RESPONSE,
-      :OPCODE => :QUERY,
+      h.type  = :RESPONSE
+      h.class = :QUERY
 
-      :AA => false, :TC => false, :RD => false, :RA => false,
+      h.status = :NOERROR
 
-      :RCODE => :OK,
+      h.questions = 1
+      h.answers   = 1
+    },
 
-      :QDCOUNT => message.questions.length,
-      :ANCOUNT => message.questions.length,
-      :NSCOUNT => 0,
-      :ARCOUNT => 0
-    ),
+    [question],
 
-    message.questions,
+    [question].map {|question|
+      DNS::ResourceRecord.new {|r|
+        r.name  = question.name
+        r.type  = :A
+        r.class = :IN
 
-    message.questions.map {|question|
-      ip = '0.0.0.0'
+        r.ttl = 3600
 
-      config.elements.each('//domain') {|domain|
-        case domain.attributes['type']
-          when 'regexp'
-            if question.name.to_s.match(Regexp.new(domain.attributes['matches']))
-              ip = domain.text
-              break
-            end
-
-          else
-            if question.name.to_s.match(Regexp.new(Regexp.escape(domain.attributes['matches']).gsub(/\*/, '.*').gsub(/\?/, '.')))
-              ip = domain.text
-            end
-        end
+        r.length = DNS::ResourceRecord::IN::A.length
+        r.data   = DNS::ResourceRecord::IN::A.new(ip)
       }
-
-      DNS::ResourceRecord.new(
-        :NAME  => question.name,
-        :TYPE  => DNS::Type.new(:A),
-        :CLASS => DNS::Class.new(:IN),
-
-        :TTL => 3600,
-
-        :RDLENGTH => DNS::ResourceRecord::IN::A.length,
-        :RDATA    => DNS::ResourceRecord::IN::A.new(ip)
-      )
     }
   )
-
-  rescue Exception => e
-    DNS.debug e
-  end
 }
 
 server.start

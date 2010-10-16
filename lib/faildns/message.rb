@@ -24,39 +24,50 @@ require 'faildns/resourcerecord'
 module DNS
 
 class Message
+  def self.parse (string)
+    string.force_encoding 'BINARY'
+    original = string.clone
+
+    header = Header.parse(string);
+
+    questions = []
+    1.upto(header.questions) {
+      questions << Question.parse(string, original);
+    }
+
+    answers = []
+    1.upto(header.answers) {
+      answers << ResourceRecord.parse(string, original);
+    }
+
+    authorities = []
+    1.upto(header.authorities) {
+      authorities << ResourceRecord.parse(string, original);
+    }
+
+    additionals = []
+    1.upto(header.additionals) {
+      additionals << ResourceRecord.parse(string, original);
+    }
+
+    Message.new(header, questions, answers, authorities, additionals)
+  end
+
+  def self.length (string)
+    string = string.clone
+  end
+
   attr_reader :header, :questions, :answers, :authorities, :additionals
 
   def initialize (*args)
-    if args.length == 1
-      @original = args.shift
-      @original.force_encoding 'BINARY'
-      string = @original.clone
-
-      @header = Header.parse(string);
-
-      @questions = []
-      1.upto(@header[:QDCOUNT]) {
-        @questions << Question.parse(string, @original);
-      }
-
-      @answers = []
-      1.upto(@header[:ANCOUNT]) {
-        @answers << ResourceRecord.parse(string, @original);
-      }
-
-      @authorities = []
-      1.upto(@header[:NSCOUNT]) {
-        @authorities << ResourceRecord.parse(string, @original);
-      }
-
-      @additionals = []
-      1.upto(@header[:ARCOUNT]) {
-        @additionals << ResourceRecord.parse(string, @original);
-      }
-    elsif args.length > 1
+    if args.length > 1
       @header, @questions, @answers, @authorities, @additionals = *(args.concat([[], [], [], []]))
     else
       raise ArgumentError.new('You have to pass at least 1 parameter.')
+    end
+
+    if block_given?
+      yield self
     end
   end
 

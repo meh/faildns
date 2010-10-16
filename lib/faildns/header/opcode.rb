@@ -19,40 +19,41 @@
 
 module DNS
 
+class Header
+
 #--
-# CLASS fields appear in resource records.  The following CLASS mnemonics
-# and values are defined:
+# OPCODE          A four bit field that specifies kind of query in this
+#                 message.  This value is set by the originator of a query
+#                 and copied into the response.  The values are:
 # 
-# IN              1 the Internet
+#                 0               a standard query (QUERY)
 # 
-# CS              2 the CSNET class (Obsolete - used only for examples in
-#                 some obsolete RFCs)
+#                 1               an inverse query (IQUERY)
 # 
-# CH              3 the CHAOS class
+#                 2               a server status request (STATUS)
 # 
-# HS              4 Hesiod [Dyer 87]
+#                 3-15            reserved for future use
 #++
 
-class Class
+class Opcode
   Values = {
-    1 => :IN,
-    2 => :CS,
-    3 => :CH,
-    4 => :HS
+    0  => :QUERY,
+    1  => :IQUERY,
+    2  => :STATUS,
+    3  => :RESERVED3,
+    4  => :NOTIFY,
+    5  => :UPDATE,
+    6  => :RESERVED6,
+    7  => :RESERVED7,
+    8  => :RESERVED8,
+    9  => :RESERVED9,
+    10 => :RESERVED10,
+    11 => :RESERVED11,
+    12 => :RESERVED12,
+    13 => :RESERVED13,
+    14 => :RESERVED14,
+    15 => :RESERVED15
   }
-
-  def self.parse (string)
-    string.force_encoding 'BINARY'
-
-    result = self.new(string.unpack('n').first)
-    string[0, self.length] = ''
-
-    return result
-  end
-
-  def self.length (string=nil)
-    2
-  end
 
   attr_reader :value
 
@@ -66,12 +67,8 @@ class Class
     end
 
     if !self.to_sym
-      raise ArgumentError.new('The passed value is not a suitable class.')
+      raise ArgumentError.new('The passed value is not a suitable type.')
     end
-  end
-
-  def pack
-    [@value].pack('n')
   end
 
   def == (what)
@@ -91,6 +88,8 @@ class Class
   def to_s
     Values[@value].to_s
   end
+end
+
 end
 
 end

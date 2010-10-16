@@ -78,19 +78,16 @@ class ResourceRecord
   def self.parse (string, original)
     string.force_encoding 'BINARY'
 
-    result = {}
+    ResourceRecord.new {|r|
+      r.name  = DomainName.parse(string, original)
+      r.type  = Type.parse(string)
+      r.class = Class.parse(string)
 
-    result[:NAME] = DomainName.parse(string, original)
+      r.ttl = string.unpack('N').first; string[0, 4] = ''
 
-    result[:TYPE]  = Type.parse(string)
-    result[:CLASS] = Class.parse(string)
-
-    result[:TTL] = string.unpack('N').first; string[0, 4] = ''
-
-    result[:RDLENGTH] = string.unpack('n').first; string[0, 2] = ''
-    result[:RDATA]    = ResourceRecord.const_get(result[:CLASS].to_sym).const_get(result[:TYPE].to_sym).parse(string, result[:RDLENGTH], original);
-
-    ResourceRecord.new(result)
+      r.length = string.unpack('n').first; string[0, 2] = ''
+      r.data   = ResourceRecord.const_get(r.class.to_sym).const_get(r.type.to_sym).parse(string, r.length, original);
+    }
   end
 
   def self.length (string)
@@ -99,24 +96,31 @@ class ResourceRecord
     (tmp = DomainName.length(string) + Type.length + Class.length + 4) + string[tmp, 2].unpack('n').first + 2
   end
 
-  def initialize (what)
+  def initialize (what={})
     if !what.is_a? Hash
       raise ArgumentError.new('You have to pass a Hash.')
     end
 
     @data = what
+
+    if block_given?
+      yield self
+    end
   end
 
-  def [] (name)
-    @data[name]
-  end
+  def name;   @data[:NAME]     end
+  def type;   @data[:TYPE]     end
+  def class;  @data[:CLASS]    end
+  def ttl;    @data[:TTL]      end
+  def length; @data[:RDLENGTH] end
+  def data;   @data[:RDATA]    end
 
-  def name;   self[:NAME]     end
-  def type;   self[:TYPE]     end
-  def class;  self[:CLASS]    end
-  def ttl;    self[:TTL]      end
-  def length; self[:RDLENGTH] end
-  def data;   self[:RDATA]    end
+  def name= (val);   @data[:NAME]     = val            end
+  def type= (val);   @data[:TYPE]     = Type.new(val)  end
+  def class= (val);  @data[:CLASS]    = Class.new(val) end
+  def ttl= (val);    @data[:TTL]      = val            end
+  def length= (val); @data[:RDLENGTH] = val            end
+  def data= (val);   @data[:RDATA]    = val            end
 
   def pack
     self.name.pack + self.type.pack + self.class.pack + [self.ttl].pack('N') +
