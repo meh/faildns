@@ -42,40 +42,14 @@ class Dispatcher
 
     @started = true
 
-    @listening = Fiber.new {
-      while true
-        @connection.accept
-
-        Fiber.yield
-      end
-    }
-
-    @reading = Fiber.new {
+    @defaults = [Fiber.new {
       while true
         @connection.read
 
         Fiber.yield
       end
-    }
+    }]
 
-    @handling = Fiber.new {
-      while true
-        @connection.handle
-
-        Fiber.yield
-      end
-    }
-
-    @writing = Fiber.new {
-      while true
-        @connection.write
-
-        Fiber.yield
-      end
-    }
-
-    @defaults = [@listening, @writing, @reading, @handling]
-    
     self.loop
   end
 
@@ -200,10 +174,6 @@ class Dispatcher
   def execute (*args)
     @event.execute(*args)
   end
-
-  # s = UDPSocket.new
-  # s.bind(host, port)
-  # s.recvfrom_nonblock(512)
 end
 
 end

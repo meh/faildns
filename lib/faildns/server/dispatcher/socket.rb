@@ -47,14 +47,11 @@ class Socket
   end
 
   def send (message)
-    @dispatcher.connection.send message, self
-  end
-
-  def raw (data)
     if @socket.is_a? TCPSocket
-      @socket.send_nonblock(data)
+      @socket.send_nonblock(message.pack)
+      @socket.close
     else
-      @socket.send(data, 0, ::Socket.pack_sockaddr_in(@port, @ip))
+      @socket.send(message.pack, 0, ::Socket.pack_sockaddr_in(@port, @ip))
     end
   end
 

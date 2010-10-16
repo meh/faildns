@@ -36,9 +36,6 @@ class ConnectionDispatcher
     @server     = dispatcher.server
     @dispatcher = dispatcher
 
-    @input  = []
-    @output = []
-
     @host = @server.options[:host] || '0.0.0.0'
     @port = @server.options[:port] || 53
 
@@ -54,63 +51,38 @@ class ConnectionDispatcher
     @listening[:UDP].bind(@host, @port)
   end
 
-  def send (message, socket)
-    @output.push([message, socket])
-  end
+  def read
+    reading, = IO::select @sockets.concat([@listening[:UDP], @listening[:TCP]])
 
-  def accept (timeout=0)
-    begin
-      if IO::select [@listening[:TCP]], nil, nil, timeout
-        @sockets.push @listening[:TCP].accept.nonblock
-      end
-    rescue Errno::EAGAIN
-    rescue Exception => e
+    if !reading
+      return
     end
-  end
 
-  def read (timeout=0.1)
-    reading, = IO::select @sockets, nil, nil, timeout
-
-    (reading || []).each {|socket|
-      @input.push [socket.recv_nonblock(65535), socket]
-      @sockets.delete(socket)
-    }
-
-    begin
-      @input.push @listening[:UDP].recvfrom_nonblock(512)
-    rescue Errno::EAGAIN
-    end
-  end
-
-  def handle
-    while input = @input.shift
-      DNS.debug input.inspect, { :level => 9 }
-
-      Thread.new(input) {|input|
+    reading.each {|socket|
+      if socket.is_a? TCPServer
+        @sockets.push @listening[:TCP].accept_nonblock
+      elsif socket.is_a? TCPSocket
+        self.handle socket.recv_nonblock(65535), socket
+        @sockets.delete(socket)
+      else
         begin
-          @dispatcher.dispatch :input, Socket.new(@dispatcher, input[1]), Message.parse(input[0])
-        rescue Exception => e
-          DNS.debug e
+          self.handle *@listening[:UDP].recvfrom_nonblock(512)
+        rescue Errno::EAGAIN
         end
-      }
-    end
+      end
+    }
   end
 
-  def write (timeout=0)
-    tmp = []
+  def handle (string, socket)
+    DNS.debug "#{socket.inspect}: #{string.inspect}", { :level => 9 }
 
-    while (output = @output.shift)
+    Thread.new(string) {|input|
       begin
-        output[1].raw(output[0].pack)
-        output[1].close
-      rescue Errno::EAGAIN
-        tmp.push(output)
+        @dispatcher.dispatch :input, Socket.new(@dispatcher, socket), Message.parse(string)
       rescue Exception => e
         DNS.debug e
       end
-    end
-
-    @output.insert(-1, *tmp)
+    }
   end
 end
 
