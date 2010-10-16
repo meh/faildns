@@ -192,12 +192,22 @@ class DomainName
   attr_accessor :domain
 
   def initialize (domain)
+    if domain.is_a? DomainName
+      domain = domain.domain
+    end
+
+    if !domain.is_a? String
+      raise ArgumentError.new 'The passed value is not a string.'
+    end
+
     @domain = domain
   end
 
   def to_s
     @domain
   end
+
+  alias to_str to_s
 
   def pack (options={})
     result = ''

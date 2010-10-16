@@ -1,3 +1,4 @@
+#! /usr/bin/env ruby
 #--
 # Copyleft meh. [http://meh.doesntexist.org | meh@paranoici.org]
 #
@@ -17,35 +18,20 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/class'
+require 'faildns/client'
+require 'optimus'
 
-module DNS
+opt = Optimus.new {|o|
+  o.set(
+    :type => :array,
 
-#--
-# QCLASS fields appear in the question section of a query.  QCLASS values
-# are a superset of CLASS values; every CLASS is a valid QCLASS.  In
-# addition to CLASS values, the following QCLASSes are defined:
-#
-# *               255 any class
-#++
+    :long  => 'servers',
+    :short => 's'
+  )
+}
 
-class QClass < Class
-  Values = {
-    254 => :NONE,
-    255 => :ANY
-  }
+client = DNS::Client.new(:servers => opt.params[:s])
 
-  def initialize (value)
-    super(value)
-  end
-
-  def to_sym
-    Values[@value] || Class::Values[@value]
-  end
-
-  def to_s
-    (Values[@value] || Class::Values[@value]).to_s
-  end
-end
-
-end
+opt.args.each {|arg|
+  puts "#{arg}: #{client.resolve arg}"
+}

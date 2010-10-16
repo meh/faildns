@@ -20,12 +20,16 @@
 module DNS
   Version = '0.0.1'
 
-  def self.debug (argument, separator='')
+  def self.debug (argument, options={})
     if !ENV['DEBUG']
       return
     end
 
-    output = "From: #{caller.first}\n"
+    if ENV['DEBUG'].to_i < (options[:level] || 1)
+      return
+    end
+
+    output = "From: #{caller[0, options[:deep] || 1].join("\n")}\n"
   
     if argument.is_a?(Exception)
       output << "#{argument.class}: #{argument.message}\n"
@@ -39,8 +43,8 @@ module DNS
       output << "#{argument.inspect}\n"
     end
   
-    if separator
-      output << separator
+    if options[:separator]
+      output << options[:separator]
     end
 
     puts output

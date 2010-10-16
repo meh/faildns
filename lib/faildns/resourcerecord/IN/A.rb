@@ -46,7 +46,7 @@ module IN
 
 class A < Data
   def self._parse (string, original)
-    A.new(string.unpack('N').first)
+    A.new(IP.new(string[0, 4]))
   end
 
   def self.length

@@ -17,6 +17,7 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 
 require 'faildns/server'
+require 'faildns/client'
 require 'optimus'
 require 'rexml/document'
 
@@ -48,8 +49,17 @@ opt = Optimus.new {|o|
 }
 
 $config  = REXML::Document.new(File.new(opt.params[:c]))
-$options = opt.params
+$options = {
+    :host => ($config.elements.each('//bind/host') {}.first.text rescue nil) || opt.params[:host],
+    :port => ($config.elements.each('//bind/port') {}.first.text rescue nil) || opt.params[:port]
+}
 $server  = DNS::Server.new($options)
+
+$client  = DNS::Client.new {|c|
+  $config.elements.each('//servers/server') {|server|
+    c.servers.push server.text
+  }
+}
 
 module Commands
   module IN
@@ -72,6 +82,8 @@ module Commands
         end
       }
     
+      ip = $client.resolve(question.name) if !ip
+
       if !ip
         return DNS::Message.new(
           DNS::Header.new {|h|
@@ -126,7 +138,21 @@ $server.register :input, lambda {|socket, message|
   method   = Commands.const_get(question.class.to_sym).method(question.type.to_sym) rescue nil
 
   if !method
-    DNS.debug 'Not implemented yet.'
+    socket.send DNS::Message.new(
+      DNS::Header.new {|h|
+        h.id = message.header.id
+
+        h.type  = :RESPONSE
+        h.class = :QUERY
+
+        h.status = :NOTIMP
+
+        h.questions = 1
+      },
+
+      [question]
+    )
+
     return
   end
 

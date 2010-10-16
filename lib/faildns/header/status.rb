@@ -74,7 +74,13 @@ class Status
     13 => :RESERVED13,
     14 => :RESERVED14,
     15 => :RESERVED15,
-    16 => :BADVERS
+    16 => :BADSIG,
+    17 => :BADKEY,
+    18 => :BADTIME,
+    19 => :BADMODE,
+    20 => :BADNAME,
+    21 => :BADALG,
+    22 => :BADTRUNC
   }
 
   attr_reader :value

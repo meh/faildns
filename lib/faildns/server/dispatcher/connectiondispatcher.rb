@@ -84,6 +84,8 @@ class ConnectionDispatcher
 
   def handle
     while input = @input.shift
+      DNS.debug input.inspect, { :level => 9 }
+
       Thread.new(input) {|input|
         begin
           @dispatcher.dispatch :input, Socket.new(@dispatcher, input[1]), Message.parse(input[0])

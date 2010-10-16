@@ -60,13 +60,11 @@ module DNS
 
 class Question
   def self.parse (string, original)
-    result = {}
-
-    result[:QNAME]  = DomainName.parse(string, original);
-    result[:QTYPE]  = QType.parse(string);
-    result[:QCLASS] = QClass.parse(string);
-
-    return Question.new(result)
+    Question.new {|q|
+      q.name  = DomainName.parse(string, original);
+      q.type  = QType.parse(string);
+      q.class = QClass.parse(string);
+    }
   end
 
   def self.length (string)
@@ -75,24 +73,28 @@ class Question
     return result
   end
 
-  def initialize (what)
+  def initialize (what={})
     if !what.is_a? Hash
       raise ArgumentError.new('You have to pass a Hash.')
     end
 
     @data = what
+
+    if block_given?
+      yield self
+    end
   end
 
-  def [] (name)
-    @data[name]
-  end
+  def name;  @data[:QNAME]  end
+  def type;  @data[:QTYPE]  end
+  def class; @data[:QCLASS] end
 
-  def name;  self[:QNAME]  end
-  def type;  self[:QTYPE]  end
-  def class; self[:QCLASS] end
+  def name= (val);  @data[:QNAME]  = DomainName.new(val) end
+  def type= (val);  @data[:QTYPE]  = QType.new(val)      end
+  def class= (val); @data[:QCLASS] = QClass.new(val)     end
 
   def pack
-    self[:QNAME].pack + self[:QTYPE].pack + self[:QCLASS].pack
+    self.name.pack + self.type.pack + self.class.pack
   end
 end
 

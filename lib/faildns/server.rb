@@ -33,6 +33,10 @@ class Server
     @options = options
 
     @dispatcher = Dispatcher.new(self)
+
+    if block_given?
+      yield self
+    end
   end
 
   def start

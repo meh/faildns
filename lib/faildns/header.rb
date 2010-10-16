@@ -138,7 +138,9 @@ module DNS
 
 class Header
   @@default = {
-    :AA => false, :TC => false, :RD => false, :RA => false,
+    :AA => false, :TC => false, :RD => false, :RA => false, :AD => false, :CD => true,
+
+    :RCODE => Status.new(:NOERROR),
 
     :QDCOUNT => 0,
     :ANCOUNT => 0,
@@ -162,8 +164,8 @@ class Header
       :TC => (data[1] & 0x200 != 0),
       :RD => (data[1] & 0x100 != 0),
       :RA => (data[1] & 0x80  != 0),
-
-      :Z  => (data[1] & 0x70  == 0),
+      :AD => (data[1] & 0x40  != 0),
+      :CD => (data[1] & 0x20  != 0),
 
       :RCODE  => Status.new(data[1] & 0xf),
 
@@ -200,6 +202,8 @@ class Header
   def truncated?;     @data[:TC]      end
   def recursive?;     @data[:RD]      end
   def recursivable?;  @data[:RA]      end
+  def authentic?;     @data[:AD]      end
+  def checking?;      @data[:CD]      end
   def status;         @data[:RCODE]   end
   def questions;      @data[:QDCOUNT] end
   def answers;        @data[:ANCOUNT] end
@@ -213,10 +217,14 @@ class Header
   def truncated!;         @data[:TC]      = true            end
   def recursive!;         @data[:RD]      = true            end
   def recursivable!;      @data[:RA]      = true            end
+  def authentic!;         @data[:AD]      = true            end
+  def checking!;          @data[:CD]      = true            end
   def not_authoritative!; @data[:AA]      = false           end
   def not_truncated!;     @data[:TC]      = false           end
   def not_recursive!;     @data[:RD]      = false           end
   def not_recursivable!;  @data[:RA]      = false           end
+  def not_authentic!;     @data[:AD]      = false           end
+  def not_checking!;      @data[:CD]      = false           end
   def status= (val);      @data[:RCODE]   = Status.new(val) end
   def questions= (val);   @data[:QDCOUNT] = val             end
   def answers= (val);     @data[:ANCOUNT] = val             end
