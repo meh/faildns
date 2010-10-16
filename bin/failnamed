@@ -49,10 +49,10 @@ server.register :input, lambda {|socket, message|
     return
   end
 
-  ip = nil
-
   question = message.questions.first
 
+
+  ip = nil
   config.elements.each('//domain') {|domain|
     case domain.attributes['type']
       when 'regexp'

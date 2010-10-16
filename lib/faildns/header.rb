@@ -17,6 +17,7 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
+require 'faildns/header/type'
 require 'faildns/header/opcode'
 require 'faildns/header/status'
 
@@ -153,7 +154,7 @@ class Header
     return Header.new(
       :ID => data[0],
 
-      :QR => (data[1] & 0x8000 != 0) ? :RESPONSE : :QUERY,
+      :QR => Type.new((data[1] & 0x8000) >> 15),
 
       :OPCODE => Opcode.new((data[1] & 0x7800) >> 11),
 
@@ -206,7 +207,7 @@ class Header
   def additionals;    @data[:ARCOUNT] end
 
   def id= (val);          @data[:ID]      = val             end
-  def type= (val);        @data[:QR]      = val             end
+  def type= (val);        @data[:QR]      = Type.new(val)   end
   def class= (val);       @data[:OPCODE]  = Opcode.new(val) end
   def authoritative!;     @data[:AA]      = true            end
   def truncated!;         @data[:TC]      = true            end
@@ -226,12 +227,12 @@ class Header
     [
       self.id,
 
-      ( (self.type == :RESPONSE) ? (1 << 15) : 0 \
+      ( (self.type.value << 15) \
       | (self.class.value << 14) \
-      | (self.authoritative?) ? (1 << 10) : 0 \
-      | (self.truncated?) ? (1 << 9) : 0 \
-      | (self.recursive?) ? (1 << 8) : 0 \
-      | (self.recursivable?) ? (1 << 7) : 0 \
+      | ((self.authoritative?) ? (1 << 10) : 0) \
+      | ((self.truncated?) ? (1 << 9) : 0) \
+      | ((self.recursive?) ? (1 << 8) : 0) \
+      | ((self.recursivable?) ? (1 << 7) : 0) \
       | (self.status.value)),
 
       self.questions,
