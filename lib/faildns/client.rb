@@ -77,7 +77,7 @@ class Client
           end
 
           if tmp.header.status == :NOERROR && tmp.header.id == id
-            result = tmp.answers.find {|answer| answer.type == :A}.data.to_s
+            result = tmp.answers.find {|answer| answer.type == :A}.data.to_s rescue nil
             break
           end
         end
