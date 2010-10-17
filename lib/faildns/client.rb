@@ -58,13 +58,9 @@ class Client
       q.type  = (options[:version] == 4) ? :A : :AAAA
     }, options.merge(:limit => 1, :matches => [:NOERROR])).first.last rescue nil
 
-    if !response
-      return false
-    end
-
     response.message.answers.find {|answer|
       answer.type == (options[:version] == 4) ? :A : :AAAA
-    }.data.ip
+    }.data.ip rescue false
   end
 
   def query (message, options={})
