@@ -93,7 +93,7 @@ class Message
   end
 
   def inspect
-    "#<DNS::Message: #{header.inspect} #{[(questions.inspect if questions.length > 0), (answers.inspect if answers.length > 0), (authorities.inspect if authorities.length > 0), (additionals.inspect if additionals.length > 0)].compact.join(' ')}>"
+    "#<DNS::Message: #{header.inspect} #{[("Questions:#{questions.inspect}" if questions.length > 0), ("Answers:#{answers.inspect}" if answers.length > 0), ("Authorities:#{authorities.inspect}" if authorities.length > 0), ("Additionals:#{additionals.inspect}" if additionals.length > 0)].compact.join(' ')}>"
   end
 end
 

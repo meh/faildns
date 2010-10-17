@@ -70,7 +70,7 @@ class Socket
       data = tmp
     end
 
-    DNS.debug "[Server > #{self.inspect}] #{message.inspect}", { :level => 9 }
+    DNS.debug "[Server > #{self.inspect}] #{message.inspect}", { :level => 9, :separator => "\n" }
 
     if @socket.is_a? TCPSocket
       @socket.send_nonblock(data)
