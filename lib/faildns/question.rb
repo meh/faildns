@@ -96,6 +96,10 @@ class Question
   def pack
     self.name.pack + self.type.pack + self.class.pack
   end
+
+  def inspect
+    "#<DNS::Question: #{self.name} #{self.class} #{self.type}>"
+  end
 end
 
 end

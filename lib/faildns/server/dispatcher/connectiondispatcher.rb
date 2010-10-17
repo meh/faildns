@@ -74,11 +74,14 @@ class ConnectionDispatcher
   end
 
   def handle (string, socket)
-    DNS.debug "#{socket.inspect}: #{string.inspect}", { :level => 9 }
-
-    Thread.new(string) {|input|
+    Thread.new(@dispatcher, string, socket) {|dispatcher, string, socket|
       begin
-        @dispatcher.dispatch :input, Socket.new(@dispatcher, socket), Message.parse(string)
+        socket  = Socket.new(dispatcher, socket)
+        message = Message.parse(string)
+
+        DNS.debug "[Server < #{socket.inspect}] #{message.inspect}", { :level => 9 }
+
+        @dispatcher.dispatch :input, socket, message
       rescue Exception => e
         DNS.debug e
       end

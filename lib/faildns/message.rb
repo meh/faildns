@@ -29,43 +29,39 @@ class Message
     string.force_encoding 'BINARY'
     original = string.clone
 
-    header = Header.parse(string);
+    Message.new {|m|
+      m.header = Header.parse(string)
 
-    questions = []
-    1.upto(header.questions) {
-      questions << Question.parse(string, original);
+      1.upto(m.header.questions) {
+        m.questions << Question.parse(string, original);
+      }
+
+      1.upto(m.header.answers) {
+        m.answers << ResourceRecord.parse(string, original);
+      }
+
+      1.upto(m.header.authorities) {
+        m.authorities << ResourceRecord.parse(string, original);
+      }
+
+      1.upto(m.header.additionals) {
+        m.additionals << ResourceRecord.parse(string, original);
+      }
     }
-
-    answers = []
-    1.upto(header.answers) {
-      answers << ResourceRecord.parse(string, original);
-    }
-
-    authorities = []
-    1.upto(header.authorities) {
-      authorities << ResourceRecord.parse(string, original);
-    }
-
-    additionals = []
-    1.upto(header.additionals) {
-      additionals << ResourceRecord.parse(string, original);
-    }
-
-    Message.new(header, questions, answers, authorities, additionals)
   end
 
   def self.length (string)
     string = string.clone
   end
 
-  attr_reader :header, :questions, :answers, :authorities, :additionals
+  attr_accessor :header
 
-  def initialize (*args)
-    if args.length > 1
-      @header, @questions, @answers, @authorities, @additionals = *(args.concat([[], [], [], []]))
-    else
-      raise ArgumentError.new('You have to pass at least 1 parameter.')
-    end
+  attr_reader :questions, :answers, :authorities, :additionals
+
+  def initialize (header=nil, *args)
+    @header = header
+
+    @questions, @answers, @authorities, @additionals = *(args.concat([[], [], [], []]))
 
     if block_given?
       yield self
@@ -94,6 +90,10 @@ class Message
     }
 
     return result
+  end
+
+  def inspect
+    "#<DNS::Message: #{header.inspect} #{[(questions.inspect if questions.length > 0), (answers.inspect if answers.length > 0), (authorities.inspect if authorities.length > 0), (additionals.inspect if additionals.length > 0)].compact.join(' ')}>"
   end
 end
 

@@ -102,28 +102,23 @@ $config.elements.each('//domains/domain') {|domain|
 module Commands
   module IN
     def self.A (message)
-      question = message.questions.first
+      def self.resolve (name)
+        ip = $options[:domains].find {|domain|
+          domain.match(name) && (DNS::IP.new(domain.result).version rescue 4) == 4
+        }.location rescue nil
 
-      ip = $options[:domains].find {|domain|
-        domain.match(question.name)
-      }.location rescue nil
-
-      if !ip
-        ip = $client.resolve(question.name)
-      else
-        # if it's not an IP but a domain, do magic
-        if !(IPAddr.new(ip) rescue false)
-          tmp = $options[:domains].find {|domain|
-            domain.match(ip)
-          }
-          
-          if !tmp
-            ip = $client.resolve(ip)
-          else
-            ip = tmp.location
+        if !ip
+          ip = $client.resolve(name)
+        else
+          if !(DNS::IP.new(ip) rescue false)
+            ip = resolve(ip)
           end
         end
       end
+
+      question = message.questions.first
+
+      ip = self.resolve(question.name)
 
       if !ip
         return DNS::Message.new(
@@ -171,6 +166,73 @@ module Commands
         }
       )
     end
+
+    def self.AAAA (message)
+      def self.resolve (name)
+        ip = $options[:domains].find {|domain|
+          domain.match(name) && (DNS::IP.new(domain.result).version rescue 6) == 6
+        }.location rescue nil
+
+        if !ip
+          ip = $client.resolve(name, { :version => 6 })
+        else
+          if !(DNS::IP.new(ip) rescue false)
+            ip = resolve(ip)
+          end
+        end
+      end
+
+      question = message.questions.first
+
+      ip = self.resolve(question.name)
+
+      if !ip
+        return DNS::Message.new(
+          DNS::Header.new {|h|
+            h.id = message.header.id
+    
+            h.type  = :RESPONSE
+            h.class = :QUERY
+    
+            h.status = :NXDOMAIN
+    
+            h.questions = 2
+          },
+    
+          [question]
+        )
+      end
+    
+      return DNS::Message.new(
+        DNS::Header.new {|h|
+          h.id = message.header.id
+    
+          h.type  = :RESPONSE
+          h.class = :QUERY
+    
+          h.status = :NOERROR
+    
+          h.questions = 1
+          h.answers   = 1
+        },
+    
+        [question],
+    
+        [question].map {|question|
+          DNS::ResourceRecord.new {|r|
+            r.name  = question.name
+            r.type  = :AAAA
+            r.class = :IN
+    
+            r.ttl = 3600
+    
+            r.length = DNS::ResourceRecord::IN::AAAA.length
+            r.data   = DNS::ResourceRecord::IN::AAAA.new(ip)
+          }
+        }
+      )
+    end
+
   end
 end
 

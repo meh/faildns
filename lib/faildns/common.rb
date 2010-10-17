@@ -18,7 +18,7 @@
 #++
 
 module DNS
-  Version = '0.0.1'
+  Version = '0.0.2'
 
   def self.debug (argument, options={})
     if !ENV['DEBUG']
@@ -29,7 +29,7 @@ module DNS
       return
     end
 
-    output = "From: #{caller[0, options[:deep] || 1].join("\n")}\n"
+    output = "[#{Time.new}] From: #{caller[0, options[:deep] || 1].join("\n")}\n"
   
     if argument.is_a?(Exception)
       output << "#{argument.class}: #{argument.message}\n"

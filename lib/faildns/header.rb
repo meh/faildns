@@ -138,7 +138,12 @@ module DNS
 
 class Header
   @@default = {
+    :ID => 23,
+
     :AA => false, :TC => false, :RD => false, :RA => false, :AD => false, :CD => true,
+
+    :QR     => Type.new(:QUERY),
+    :OPCODE => Opcode.new(:QUERY),
 
     :RCODE => Status.new(:NOERROR),
 
@@ -147,6 +152,10 @@ class Header
     :NSCOUNT => 0,
     :ARCOUNT => 0
   }
+
+  def self.id
+    (rand * 100000).to_i % 65536
+  end
 
   def self.parse (string)
     data = string.unpack('nnnnnn')
@@ -249,6 +258,11 @@ class Header
       self.additionals
     ].pack('nnnnnn')
   end
+
+  def inspect
+    "#<DNS::Header:#{self.id} #{self.type} #{self.class} #{self.status} [#{self.questions} questions, #{self.answers} answers, #{self.authorities} authorities, #{self.additionals} additionals] (#{[('authoritative' if self.authoritative?), ('truncated' if self.truncated?), ('recursive' if self.recursive?), ('recursivable' if self.recursivable?), ('authentic' if self.authentic?), ('checking' if self.checking?)].compact.join(' ')})>"
+  end
 end
 
 end
+

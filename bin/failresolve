@@ -33,5 +33,5 @@ opt = Optimus.new {|o|
 client = DNS::Client.new(:servers => opt.params[:s])
 
 opt.args.each {|arg|
-  puts "#{arg}: #{client.resolve arg}"
+  puts "#{arg}: #{client.resolve(arg)} (#{client.resolve(arg, { :version => 6 })})"
 }

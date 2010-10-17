@@ -49,7 +49,7 @@ class Socket
   def send (message, close=true)
     @dispatcher.dispatch :output, self, message
 
-    if @type == :UDP && message.pack.length > 512
+    if @type == :UDP && (tmp = message.pack).length > 512
       [message.additionals, message.authorities, message.answers, message.questions].each {|rr|
         while (tmp = message.pack).length > 512 && r.pop; end
 
@@ -64,16 +64,22 @@ class Socket
       message.header.additionals = message.additionals.length
 
       message.header.truncated!
+
+      data = message.pack
+    else
+      data = tmp
     end
 
+    DNS.debug "[Server > #{self.inspect}] #{message.inspect}", { :level => 9 }
+
     if @socket.is_a? TCPSocket
-      @socket.send_nonblock(message.pack)
+      @socket.send_nonblock(data)
 
       if close
         @socket.close
       end
     else
-      @socket.send(message.pack, 0, ::Socket.pack_sockaddr_in(@port, @ip))
+      @socket.send(data, 0, ::Socket.pack_sockaddr_in(@port, @ip))
     end
   end
 
@@ -81,6 +87,10 @@ class Socket
     if @socket.is_a? TCPSocket
       @socket.close
     end
+  end
+
+  def inspect
+    "#<DNS::Server::Socket: (#{@type}) #{@ip}:#{@port}>"
   end
 end
 

@@ -92,8 +92,6 @@ class ResourceRecord
         r.data = ResourceRecord.const_get(r.class.to_sym).const_get(:NULL)
         DNS.debug "ResourceRecord::#{r.class}::#{r.type} not found."
       end
-
-      DNS.debug r.data.inspect, { :level => 2 }
       
       r.data = r.data.parse(string, r.length, original)
     }
@@ -134,6 +132,10 @@ class ResourceRecord
   def pack
     self.name.pack + self.type.pack + self.class.pack + [self.ttl].pack('N') +
     [self.length].pack('n') + self.data.pack
+  end
+
+  def inspect
+    "#<DNS::ResourceRecord: (#{self.name} #{self.class} #{self.type} [#{self.ttl}]) #{self.data.inspect}>"
   end
 end
 

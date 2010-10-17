@@ -19,11 +19,21 @@
 
 require 'timeout'
 require 'socket'
+
 require 'faildns/message'
 
 module DNS
 
 class Client
+  class Response
+    attr_reader :server, :message
+
+    def initialize (server, message)
+      @server  = server
+      @message = message
+    end
+  end
+
   attr_reader :options, :servers
 
   def initialize (options={})
@@ -36,54 +46,74 @@ class Client
     end
   end
 
-  def resolve (domain, timeout=10, tries=3)
-    result = nil
-    socket = UDPSocket.new
+  def resolve (domain, options={})
+    options = { :version => 4 }.merge(options)
+    result  = nil
+    socket  = UDPSocket.new
 
-    id = (rand * 100000).to_i % 65536
+    response = self.query(Question.new {|q|
+      q.name = domain
 
-    1.upto(tries) {
+      q.class = :IN
+      q.type  = (options[:version] == 4) ? :A : :AAAA
+    }, options.merge(:limit => 1, :matches => [:NOERROR])).first.last rescue nil
+
+    if !response
+      return false
+    end
+
+    response.message.answers.find {|answer|
+      answer.type == (options[:version] == 4) ? :A : :AAAA
+    }.data.ip
+  end
+
+  def query (message, options={})
+    options = { :timeout => 10, :tries => 3 }.merge(options)
+    result  = {}
+    socket  = UDPSocket.new
+
+    if message.is_a? Question
+      message = Message.new {|m|
+        m.header = Header.new {|h|
+          id = Header.id
+
+          h.recursive!
+
+          h.questions = 1
+        }
+
+        m.questions << message
+      }
+    end
+
+    1.upto(options[:tries]) {
       @servers.each {|server|
+        if result[server]
+          next
+        end
+
         socket.connect(server.to_s, 53)
   
-        socket.print Message.new(
-          Header.new {|h|
-            h.id = id
+        DNS.debug "[Client > #{server}] #{message.inspect}", { :level => 9, :separator => "\n" }
   
-            h.type  = :QUERY
-            h.class = :QUERY
+        socket.print message.pack
   
-            h.recursive!
+        if (tmp = Timeout.timeout(options[:timeout]) { socket.recvfrom(512) } rescue nil)
+          response = Response.new(server, Message.parse(tmp[0]))
   
-            h.questions = 1
-          },
+          DNS.debug "[Client < #{response.server}] #{response.message.inspect}", { :level => 9, :separator => "\n" }
   
-          [Question.new {|q|
-            q.name = domain
-  
-            q.class = :IN
-            q.type  = :A
-          }]
-        ).pack
-
-        if (tmp = Timeout.timeout(timeout) { socket.recvfrom(512) } rescue nil)
-          DNS.debug tmp, { :level => 9 }
-
-          tmp = Message.parse(tmp[0])
-
-          if tmp.header.status == :NXDOMAIN
-            result = false
-            break
+          if !options[:matches] || options[:matches].any? {|match| response.message.header.status == match}
+            result[server] = response
           end
+        end
 
-          if tmp.header.status == :NOERROR && tmp.header.id == id
-            result = tmp.answers.find {|answer| answer.type == :A}.data.to_s rescue nil
-            break
-          end
+        if options[:limit] && result.length >= options[:limit]
+          break
         end
       }
 
-      if !result.nil?
+      if result.length == options[:limit] || result.length == @servers.length
         break
       end
     }
@@ -91,23 +121,8 @@ class Client
     return result
   end
 
-  def query (message, timeout=10)
-    result = []
-    socket = UDPSocket.new
-
-    @servers.each {|server|
-      socket.connect(server.to_s, 53)
-
-      socket.print message.pack
-
-      if (tmp = Timeout.timeout(timeout) { socket.recvfrom(512) } rescue nil)
-        DNS.debug tmp, { :level => 9 }
-
-        result.push Message.parse(tmp[0])
-      end
-    }
-
-    return result
+  def inspect
+    "#<DNS::Client: #{@servers.inspect}>"
   end
 end
 
