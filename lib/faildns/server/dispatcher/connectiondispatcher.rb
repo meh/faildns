@@ -59,16 +59,16 @@ class ConnectionDispatcher
     end
 
     reading.each {|socket|
-      if socket.is_a? TCPServer
-        @sockets.push @listening[:TCP].accept_nonblock
-      elsif socket.is_a? TCPSocket
-        self.handle socket.recv_nonblock(65535), socket
-        @sockets.delete(socket)
-      else
-        begin
+      begin
+        if socket.is_a? TCPServer
+            @sockets.push @listening[:TCP].accept_nonblock
+        elsif socket.is_a? TCPSocket
+          self.handle socket.recv_nonblock(65535), socket
+          @sockets.delete(socket)
+        else
           self.handle *@listening[:UDP].recvfrom_nonblock(512)
-        rescue Errno::EAGAIN
         end
+      rescue Errno::EAGAIN
       end
     }
   end
