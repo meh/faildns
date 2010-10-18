@@ -50,23 +50,6 @@ class Client
     end
   end
 
-  def resolve (domain, options={})
-    options = { :version => 4 }.merge(options)
-    result  = nil
-    socket  = UDPSocket.new
-
-    response = self.query(Question.new {|q|
-      q.name = domain
-
-      q.class = :IN
-      q.type  = (options[:version] == 4) ? :A : :AAAA
-    }, options.merge(:limit => 1, :matches => [:NOERROR])).first.last rescue nil
-
-    response.message.answers.find {|answer|
-      answer.type == ((options[:version] == 4) ? :A : :AAAA)
-    }.data.ip rescue false
-  end
-
   def query (message, options={})
     options = { :timeout => 10, :tries => 3 }.merge(options)
     result  = {}
@@ -125,6 +108,23 @@ class Client
     }
 
     return result
+  end
+
+  def resolve (domain, options={})
+    options = { :version => 4 }.merge(options)
+    result  = nil
+    socket  = UDPSocket.new
+
+    response = self.query(Question.new {|q|
+      q.name = domain
+
+      q.class = :IN
+      q.type  = (options[:version] == 4) ? :A : :AAAA
+    }, options.merge(:limit => 1, :matches => [:NOERROR])).first.last rescue nil
+
+    response.message.answers.find {|answer|
+      answer.type == ((options[:version] == 4) ? :A : :AAAA)
+    }.data.ip rescue false
   end
 
   def inspect

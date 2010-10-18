@@ -61,12 +61,77 @@ $client = DNS::Client.new {|c|
   }
 }
 
-$options = {}
+$data = {}
+
+$data[:options] = {
+  :ttl => ($config.elements.each('//misc/ttl') {}.first.text.to_i rescue 3600)
+}
 
 class Domain
-  attr_accessor :type, :matches, :location
+  class Cache
+    class Record
+      attr_reader :resource
 
-  def initialize
+      def initialize (resource)
+        @modified = Time.now
+
+        @resource = resource
+      end
+
+      def valid?
+        puts @resource.name, (@modified.to_i + @resource.ttl), Time.now.to_i
+        (@modified.to_i + @resource.ttl) > Time.now.to_i
+      end
+    end
+
+    attr_accessor :ttl
+
+    attr_reader :domain, :records
+
+    def initialize (domain, records={}, exists=true)
+      @domain  = domain
+      @records = records
+      @exists  = exists
+
+      @ttl = $data[:options][:ttl]
+
+      if block_given?
+        yield self
+      end
+    end
+
+    def [] (name)
+      @records[name]
+    end
+
+    def []= (name, value)
+      @records[name] = Record.new(value)
+    end
+
+    def update (resource)
+      @modified = Time.now
+
+      @records[resource.type.to_sym] = Record.new(resource)
+    end
+
+    def valid? (name=nil)
+      if name
+        @records[name].valid? rescue false
+      else
+        (@modified.to_i + @ttl) > Time.now.to_i
+      end
+    end
+
+    def exists?;     @exists                               end
+    def exists!;     @exists = true;  @modified = Time.now end
+    def not_exists!; @exists = false; @modified = Time.now end
+  end
+
+  attr_accessor :type, :matches, :location, :ttl
+
+  def initialize (*args)
+    @type, @matches, @location, @ttl = *args
+
     if block_given?
       yield self
     end
@@ -89,10 +154,12 @@ class Domain
   end
 end
 
-$options[:domains] = []
+$data[:cache]   = {}
+$data[:domains] = []
 
 $config.elements.each('//domains/domain') {|domain|
-  $options[:domains].push Domain.new {|d|
+  $data[:domains].push Domain.new {|d|
+    d.ttl      = (domain.attributes['ttl'] ? domain.attributes['ttl'].to_i : $data[:options][:ttl])
     d.type     = domain.attributes['type']
     d.matches  = domain.attributes['matches']
     d.location = domain.text.strip
@@ -103,22 +170,77 @@ module Commands
   module IN
     def self.A (message)
       def self.resolve (name)
-        ip = $options[:domains].find {|domain|
-          domain.match(name) && (DNS::IP.new(domain.result).version rescue 4) == 4
-        }.location rescue nil
+        if !$data[:cache][name]
+          $data[:cache][name] = Domain::Cache.new(name)
+        end
 
-        if !ip
-          ip = $client.resolve(name)
+        if !$data[:cache][name].exists? && $data[:cache][name].valid?
+          return
+        end
+
+        if $data[:cache][name].valid? :A
+          return $data[:cache][name][:A].resource.data.to_s
+        end
+
+        ip = nil
+
+        domain = $data[:domains].find {|domain|
+          domain.match(name) && (DNS::IP.new(domain.location).version rescue 4) == 4
+        } rescue nil
+
+        if domain
+          if !(DNS::IP.new(domain.location) rescue false) # if it's not an IP
+            ip = resolve(domain.location)
+          else
+            ip = domain.ip
+          end
+
+          if ip
+            $data[:cache][name].update DNS::ResourceRecord.new {|r|
+              r.name  = name
+              r.class = :IN
+              r.type  = :A
+
+              r.ttl = domain.ttl
+
+              r.length = DNS::ResourceRecord::IN::A.length
+              r.data   = DNS::ResourceRecord::IN::A.new(ip)
+            }
+          else
+            $data[:cache][name].not_exists!
+          end
         else
-          if !(DNS::IP.new(ip) rescue false)
-            ip = resolve(ip)
+          response = $client.query(DNS::Question.new {|q|
+            q.name = name
+
+            q.class = :IN
+            q.type  = :A
+          }, { :limit => 1, :matches => [:NOERROR, :NXDOMAIN] }).first.last.message rescue nil
+
+          if !response || response.header.status == :NXDOMAIN
+            $data[:cache][name].not_exists!
+            return
+          else
+            $data[:cache][name].exists!
+          end
+
+          answer = response.answers.find {|answer|
+            answer.type == :A
+          }
+
+          if answer
+            $data[:cache][name].update answer
+
+            ip = answer.data.to_s
           end
         end
+
+        return ip
       end
 
       question = message.questions.first
 
-      ip = self.resolve(question.name)
+      ip = self.resolve(question.name.to_s)
 
       if !ip
         return DNS::Message.new(
@@ -169,18 +291,74 @@ module Commands
 
     def self.AAAA (message)
       def self.resolve (name)
-        ip = $options[:domains].find {|domain|
-          domain.match(name) && (DNS::IP.new(domain.result).version rescue 6) == 6
-        }.location rescue nil
+        if !$data[:cache][name]
+          $data[:cache][name] = Domain::Cache.new(name)
+        end
 
-        if !ip
-          ip = $client.resolve(name, { :version => 6 })
+        if !$data[:cache][name].exists? && $data[:cache][name].valid?
+          return
+        end
+
+        if $data[:cache][name].valid? :AAAA
+          return $data[:cache][name][:AAAA].resource.data.to_s
+        end
+
+        ip = nil
+
+        domain = $data[:domains].find {|domain|
+          domain.match(name) && (DNS::IP.new(domain.location).version rescue 6) == 6
+        } rescue nil
+
+        if domain
+          if !(DNS::IP.new(domain.location) rescue false) # if it's not an IP
+            ip = resolve(domain.location)
+          else
+            ip = domain.ip
+          end
+
+          if ip
+            $data[:cache][name].update DNS::ResourceRecord.new {|r|
+              r.name  = name
+              r.class = :IN
+              r.type  = :AAAA
+
+              r.ttl = domain.ttl
+
+              r.length = DNS::ResourceRecord::IN::AAAA.length
+              r.data   = DNS::ResourceRecord::IN::AAAA.new(ip)
+            }
+          else
+            $data[:cache][name].not_exists!
+          end
         else
-          if !(DNS::IP.new(ip) rescue false)
-            ip = resolve(ip)
+          response = $client.query(DNS::Question.new {|q|
+            q.name = name
+
+            q.class = :IN
+            q.type  = :AAAA
+          }, { :limit => 1, :matches => [:NOERROR, :NXDOMAIN] }).first.last.message rescue nil
+
+          if !response || response.header.status == :NXDOMAIN
+            $data[:cache][name].not_exists!
+            return
+          else
+            $data[:cache][name].exists!
+          end
+
+          answer = response.answers.find {|answer|
+            answer.type == :AAAA
+          }
+
+          if answer
+            $data[:cache][name].update answer
+
+            ip = answer.data.to_s
           end
         end
+
+        return ip
       end
+
 
       question = message.questions.first
 
