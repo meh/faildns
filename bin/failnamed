@@ -214,9 +214,9 @@ module Commands
 
             q.class = :IN
             q.type  = :A
-          }, { :limit => 1, :matches => [:NOERROR, :NXDOMAIN] }).first.last.message rescue nil
+          }, { :limit => 1, :status => [:NOERROR, :NXDOMAIN] }).first.last.message rescue nil
 
-          if !response || response.header.status == :NXDOMAIN
+          if (response.header.status == :NXDOMAIN rescue false)
             $data[:cache][name].not_exists!
             return
           else
@@ -225,7 +225,7 @@ module Commands
 
           answer = response.answers.find {|answer|
             answer.type == :A
-          }
+          } rescue nil
 
           if answer
             $data[:cache][name].update answer
@@ -335,9 +335,9 @@ module Commands
 
             q.class = :IN
             q.type  = :AAAA
-          }, { :limit => 1, :matches => [:NOERROR, :NXDOMAIN] }).first.last.message rescue nil
+          }, { :limit => 1, :status => [:NOERROR, :NXDOMAIN] }).first.last.message rescue nil
 
-          if !response || response.header.status == :NXDOMAIN
+          if (response.header.status == :NXDOMAIN rescue false)
             $data[:cache][name].not_exists!
             return
           else
@@ -346,7 +346,7 @@ module Commands
 
           answer = response.answers.find {|answer|
             answer.type == :AAAA
-          }
+          } rescue nil
 
           if answer
             $data[:cache][name].update answer

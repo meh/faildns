@@ -17,37 +17,26 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'timeout'
-require 'socket'
-
 require 'faildns/message'
+
+require 'faildns/client/dispatcher'
 
 module DNS
 
 class Client
-  class Response
-    attr_reader :server, :message
-
-    def initialize (server, message)
-      @server  = server
-      @message = message
-    end
-
-    def inspect
-      "#<DNS::Client::Response: (#{server}) #{message.inspect}>"
-    end
-  end
-
-  attr_reader :options, :servers
+  attr_reader :options
 
   def initialize (options={})
-    @options = options
-
-    @servers = @options[:servers] || []
+    @options    = options
+    @dispatcher = Dispatcher.new(@options[:servers] || [])
 
     if block_given?
       yield self
     end
+  end
+  
+  def servers
+    @dispatcher.servers
   end
 
   def query (message, options={})
@@ -57,8 +46,6 @@ class Client
     if message.is_a? Question
       message = Message.new {|m|
         m.header = Header.new {|h|
-          id = Header.id
-
           h.recursive!
 
           h.questions = 1
@@ -69,30 +56,19 @@ class Client
     end
 
     1.upto(options[:tries]) {
-      @servers.each {|server|
+      self.servers.each {|server|
         if result[server]
           next
         end
 
         begin
-          socket = UDPSocket.new
-          socket.connect(server.to_s, 53)
+          server.send(message)
+          
+          response = server.recv(message.header.id, options[:timeout])
   
-          DNS.debug "[Client > #{server}] #{message.inspect}", { :level => 9, :separator => "\n" }
-  
-          socket.print message.pack
-  
-          if (tmp = Timeout.timeout(options[:timeout]) { socket.recvfrom(512) } rescue nil)
-            response = Response.new(server, Message.parse(tmp[0]))
-  
-            DNS.debug "[Client < #{response.server}] #{response.message.inspect}", { :level => 9, :separator => "\n" }
-  
-            if !options[:matches] || options[:matches].any? {|match| response.message.header.status == match}
-              result[server] = response
-            end
+          if response && (!options[:status] || options[:status].any? {|match| response.message.header.status == match})
+            result[server.to_s] = response
           end
-
-          socket.close
         rescue Exception => e
           DNS.debug e
         end
@@ -120,7 +96,7 @@ class Client
 
       q.class = :IN
       q.type  = (options[:version] == 4) ? :A : :AAAA
-    }, options.merge(:limit => 1, :matches => [:NOERROR])).first.last rescue nil
+    }, options.merge(:limit => 1, :status => [:NOERROR])).first.last rescue nil
 
     response.message.answers.find {|answer|
       answer.type == ((options[:version] == 4) ? :A : :AAAA)
@@ -128,7 +104,7 @@ class Client
   end
 
   def inspect
-    "#<DNS::Client: #{@servers.inspect}>"
+    "#<DNS::Client: #{servers.inspect}>"
   end
 end
 

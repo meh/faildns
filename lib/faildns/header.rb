@@ -138,8 +138,6 @@ module DNS
 
 class Header
   @@default = {
-    :ID => 23,
-
     :AA => false, :TC => false, :RD => false, :RA => false, :AD => false, :CD => true,
 
     :QR     => Type.new(:QUERY),
@@ -197,7 +195,7 @@ class Header
       raise ArgumentError.new('You have to pass a Hash.')
     end
 
-    @data = @@default.merge(what)
+    @data = @@default.merge(:ID => Header.id).merge(what)
 
     if block_given?
       yield self
