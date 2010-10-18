@@ -79,7 +79,6 @@ class Domain
       end
 
       def valid?
-        puts @resource.name, (@modified.to_i + @resource.ttl), Time.now.to_i
         (@modified.to_i + @resource.ttl) > Time.now.to_i
       end
     end
