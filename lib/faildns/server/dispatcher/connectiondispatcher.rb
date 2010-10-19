@@ -79,7 +79,7 @@ class ConnectionDispatcher
         socket  = Socket.new(dispatcher, socket)
         message = Message.parse(string)
 
-        DNS.debug "[Server < #{socket.inspect}] #{message.inspect}", { :level => 9, :separator => "\n" }
+        DNS.debug "[Server < #{socket.to_s}] #{message.inspect}", { :level => 9, :separator => "\n" }
 
         @dispatcher.dispatch :input, socket, message
       rescue Exception => e

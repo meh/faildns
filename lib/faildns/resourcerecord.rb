@@ -85,15 +85,15 @@ class ResourceRecord
 
       r.ttl = string.unpack('N').first; string[0, 4] = ''
 
-      r.length = string.unpack('n').first; string[0, 2] = ''
-      r.data   = ResourceRecord.const_get(r.class.to_sym).const_get(r.type.to_sym) rescue nil
+      length = string.unpack('n').first; string[0, 2] = ''
+      data   = ResourceRecord.const_get(r.class.to_sym).const_get(r.type.to_sym) rescue nil
 
-      if !r.data
-        r.data = ResourceRecord.const_get(r.class.to_sym).const_get(:NULL)
+      if !data
+        data = ResourceRecord.const_get(r.class.to_sym).const_get(:NULL)
         DNS.debug "ResourceRecord::#{r.class}::#{r.type} not found."
       end
       
-      r.data = r.data.parse(string, r.length, original)
+      r.data = data.parse(string, length, original)
     }
   end
 
@@ -122,12 +122,11 @@ class ResourceRecord
   def length; @data[:RDLENGTH] end
   def data;   @data[:RDATA]    end
 
-  def name= (val);   @data[:NAME]     = DomainName.new(val) end
-  def type= (val);   @data[:TYPE]     = Type.new(val)       end
-  def class= (val);  @data[:CLASS]    = Class.new(val)      end
-  def ttl= (val);    @data[:TTL]      = val                 end
-  def length= (val); @data[:RDLENGTH] = val                 end
-  def data= (val);   @data[:RDATA]    = val                 end
+  def name= (val);   @data[:NAME]  = DomainName.new(val)                end
+  def type= (val);   @data[:TYPE]  = Type.new(val)                      end
+  def class= (val);  @data[:CLASS] = Class.new(val)                     end
+  def ttl= (val);    @data[:TTL]   = val                                end
+  def data= (val);   @data[:RDATA] = val; @data[:RDLENGTH] = val.length end
 
   def pack
     self.name.pack + self.type.pack + self.class.pack + [self.ttl].pack('N') +

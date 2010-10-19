@@ -57,7 +57,7 @@ class Client
 
     1.upto(options[:tries]) {
       self.servers.each {|server|
-        if result[server]
+        if result[server.to_s]
           next
         end
 
@@ -90,13 +90,10 @@ class Client
     options = { :version => 4 }.merge(options)
 
     response = self.query(Question.new {|q|
-      q.name = domain
-
+      q.name  = domain
       q.class = :IN
       q.type  = ((options[:version] == 4) ? :A : :AAAA)
-    }, options.merge(:limit => 1, :status => [:NOERROR])).first.last rescue nil
-
-    response.message.answers.find {|answer|
+    }, options.merge(:limit => 1, :status => [:NOERROR])).first.last.message.answers.find {|answer|
       answer.type == ((options[:version] == 4) ? :A : :AAAA)
     }.data.ip rescue false
   end

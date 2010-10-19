@@ -67,6 +67,10 @@ class HINFO < Data
     [@cpu.length].unpack('C') + @cpu + [@os.length].unpack('C') + @os
   end
 
+  def length
+    self.pack.length
+  end
+
   def to_s
     "#{@os} on #{@cpu}"
   end

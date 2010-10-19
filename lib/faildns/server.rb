@@ -66,6 +66,10 @@ class Server
   def fire (*args)
     @dispatcher.event.fire(*args)
   end
+
+  def to_s
+    "#{@host}#{":#{@port}" if @port != 53}"
+  end
 end
 
 end

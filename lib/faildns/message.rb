@@ -68,12 +68,8 @@ class Message
     end
   end
 
-  def pack (fix=true)
-    begin
-    _fix if fix
-    rescue Exception => e
-    DNS.debug e
-    end
+  def pack (normalize=true)
+    self.normalize if normalize
 
     result = ''
 
@@ -98,17 +94,15 @@ class Message
     return result
   end
 
-  def inspect
-    "#<Message: #{header.inspect} #{[("Questions:#{questions.inspect}" if questions.length > 0), ("Answers:#{answers.inspect}" if answers.length > 0), ("Authorities:#{authorities.inspect}" if authorities.length > 0), ("Additionals:#{additionals.inspect}" if additionals.length > 0)].compact.join(' ')}>"
-  end
-
-  private
-
-  def _fix
+  def normalize
     @header.questions   = @questions.length
     @header.answers     = @answers.length
     @header.authorities = @authorities.length
     @header.additionals = @additionals.length
+  end
+
+  def inspect
+    "#<Message: #{header.inspect} #{[("Questions:#{questions.inspect}" if questions.length > 0), ("Answers:#{answers.inspect}" if answers.length > 0), ("Authorities:#{authorities.inspect}" if authorities.length > 0), ("Additionals:#{additionals.inspect}" if additionals.length > 0)].compact.join(' ')}>"
   end
 end
 

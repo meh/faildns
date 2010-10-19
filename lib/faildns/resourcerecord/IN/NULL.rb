@@ -54,6 +54,10 @@ class NULL < Data
     @raw
   end
 
+  def length
+    self.pack.length
+  end
+
   def to_s
     @raw
   end

@@ -54,6 +54,14 @@ class TXT < Data
   def initialize (data)
     @data = data
   end
+
+  def pack
+    ''
+  end
+
+  def length
+    self.pack.length
+  end
 end
 
 end

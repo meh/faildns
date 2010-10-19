@@ -63,6 +63,10 @@ class MX < Data
     [@preference].pack('n') + @exchange.pack
   end
 
+  def length
+    self.pack.length
+  end
+
   def to_s
     "#{@preference}) #{@exchange}"
   end

@@ -258,7 +258,7 @@ class Header
   end
 
   def inspect
-    "#<Header:(#{self.id}) #{self.type} #{self.class} #{self.status} [#{self.questions} questions, #{self.answers} answers, #{self.authorities} authorities, #{self.additionals} additionals] (#{[('authoritative' if self.authoritative?), ('truncated' if self.truncated?), ('recursive' if self.recursive?), ('recursivable' if self.recursivable?), ('authentic' if self.authentic?), ('checking' if self.checking?)].compact.join(' ')})>"
+    "#<Header:(#{self.id}) #{self.type} #{self.class} #{self.status} [#{self.questions} questions, #{self.answers} answers, #{self.authorities} authorities, #{self.additionals} additionals]#{tmp = [('authoritative' if self.authoritative?), ('truncated' if self.truncated?), ('recursive' if self.recursive?), ('recursivable' if self.recursivable?), ('authentic' if self.authentic?), ('checking' if self.checking?)].compact.join(' '); " (#{tmp})" if !tmp.empty?}>"
   end
 end
 

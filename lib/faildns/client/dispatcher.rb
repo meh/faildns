@@ -27,7 +27,7 @@ class Dispatcher
   attr_reader :servers
 
   def initialize (servers=[])
-    @servers = Servers.new(servers)
+    @servers = Servers.new(servers.map {|server| Server.new(server)})
   end
 end
 

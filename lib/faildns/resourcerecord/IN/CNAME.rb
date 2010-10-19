@@ -58,6 +58,10 @@ class CNAME < Data
     @domain.pack
   end
 
+  def length
+    self.pack.length
+  end
+
   def to_s
     @domain.to_s
   end

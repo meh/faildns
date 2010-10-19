@@ -70,7 +70,7 @@ class Socket
       data = tmp
     end
 
-    DNS.debug "[Server > #{self.inspect}] #{message.inspect}", { :level => 9, :separator => "\n" }
+    DNS.debug "[Server > #{self.to_s}] #{message.inspect}", { :level => 9, :separator => "\n" }
 
     if @socket.is_a? TCPSocket
       @socket.send_nonblock(data)
@@ -87,6 +87,10 @@ class Socket
     if @socket.is_a? TCPSocket
       @socket.close
     end
+  end
+
+  def to_s
+    "#{@ip}:#{@port}"
   end
 
   def inspect

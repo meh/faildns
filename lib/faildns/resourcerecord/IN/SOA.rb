@@ -124,21 +124,25 @@ class SOA < Data
   def expire;      @data[:EXPIRE]  end
   def minimum;     @data[:MINIMUM] end
 
-  def server= (val);      @data[:MNAME] = DomainName.new(val) end
-  def responsible= (val); @data[:RNAME] = DomainName.new(val) end
-  def serial= (val);      @data[:SERIAL] = val.to_i           end
-  def refresh= (val);     @data[:REFRESH] = val.to_i          end
-  def retry= (val);       @data[:RETRY] = val.to_i            end
-  def expire= (val);      @data[:EXPIRE] = val.to_i           end
-  def minimum= (val);     @data[:MINIMUM] = val.to_i          end
+  def server= (val);      @data[:MNAME]   = DomainName.new(val) end
+  def responsible= (val); @data[:RNAME]   = DomainName.new(val) end
+  def serial= (val);      @data[:SERIAL]  = val.to_i            end
+  def refresh= (val);     @data[:REFRESH] = val.to_i            end
+  def retry= (val);       @data[:RETRY]   = val.to_i            end
+  def expire= (val);      @data[:EXPIRE]  = val.to_i            end
+  def minimum= (val);     @data[:MINIMUM] = val.to_i            end
 
   def pack
     self.server.pack + self.responsible.pack + [self.serial].pack('N') + [self.refresh].pack('N')+
     [self.retry].pack('N') + [self.expire].pack('N') + [self.minimum].pack('N')
   end
 
-  def inspect
+  def length
+    self.pack.length
+  end
 
+  def inspect
+    "#<IN SOA: >"
   end
 end
 

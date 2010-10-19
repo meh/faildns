@@ -183,11 +183,19 @@ module Commands
 
         ip = nil
 
-        domain = $data[:domains].find {|domain|
-          domain.match(name) && (DNS::IP.new(domain.location).version rescue 4) == 4
-        } rescue nil
+        domains = $data[:domains].select {|domain|
+          domain.match(name)
+        }
 
-        if domain
+        if !domains.empty?
+          domain = domains.find {|domain|
+            (DNS::IP.new(domain.location).version rescue 4) == 4
+          }
+
+          if !domain
+            return
+          end
+
           if !(DNS::IP.new(domain.location) rescue false) # if it's not an IP
             ip = resolve(domain.location)
           else
@@ -202,8 +210,7 @@ module Commands
 
               r.ttl = domain.ttl
 
-              r.length = DNS::ResourceRecord::IN::A.length
-              r.data   = DNS::ResourceRecord::IN::A.new(ip)
+              r.data = DNS::ResourceRecord::IN::A.new(ip)
             }
           else
             $data[:cache][name].not_exists!
@@ -242,7 +249,7 @@ module Commands
       ip = self.resolve(question.name.to_s)
 
       if ip == false
-        return DNS::Message.new(
+        DNS::Message.new(
           DNS::Header.new {|h|
             h.id = message.header.id
     
@@ -254,33 +261,41 @@ module Commands
     
           [question]
         )
-      end
+      elsif ip == nil
+        DNS::Message.new(
+          DNS::Header.new {|h|
+            h.id = message.header.id
     
-      return DNS::Message.new(
-        DNS::Header.new {|h|
-          h.id = message.header.id
+            h.type  = :RESPONSE
+            h.class = :QUERY
+          },
     
-          h.type  = :RESPONSE
-          h.class = :QUERY
-    
-          h.status = :NOERROR
-        },
-    
-        [question],
-    
-        [question].map {|question|
-          DNS::ResourceRecord.new {|r|
-            r.name  = question.name
-            r.type  = :A
-            r.class = :IN
-    
-            r.ttl = 3600
-    
-            r.length = DNS::ResourceRecord::IN::A.length
-            r.data   = DNS::ResourceRecord::IN::A.new(ip)
+          [question]
+        )
+      else
+        DNS::Message.new(
+          DNS::Header.new {|h|
+            h.id = message.header.id
+      
+            h.type  = :RESPONSE
+            h.class = :QUERY
+          },
+      
+          [question],
+      
+          [question].map {|question|
+            DNS::ResourceRecord.new {|r|
+              r.name  = question.name
+              r.type  = :A
+              r.class = :IN
+      
+              r.ttl = 3600
+      
+              r.data = DNS::ResourceRecord::IN::A.new(ip)
+            }
           }
-        }
-      )
+        )
+      end
     end
 
     def self.AAAA (message)
@@ -299,11 +314,19 @@ module Commands
 
         ip = nil
 
-        domain = $data[:domains].find {|domain|
-          domain.match(name) && (DNS::IP.new(domain.location).version rescue 6) == 6
-        } rescue nil
+        domains = $data[:domains].select {|domain|
+          domain.match(name)
+        }
 
-        if domain
+        if !domains.empty?
+          domain = domains.find {|domain|
+            (DNS::IP.new(domain.location).version rescue 6) == 6
+          }
+
+          if !domain
+            return
+          end
+
           if !(DNS::IP.new(domain.location) rescue false) # if it's not an IP
             ip = resolve(domain.location)
           else
@@ -318,8 +341,7 @@ module Commands
 
               r.ttl = domain.ttl
 
-              r.length = DNS::ResourceRecord::IN::AAAA.length
-              r.data   = DNS::ResourceRecord::IN::AAAA.new(ip)
+              r.data = DNS::ResourceRecord::IN::AAAA.new(ip)
             }
           else
             $data[:cache][name].not_exists!
@@ -353,13 +375,12 @@ module Commands
         return ip
       end
 
-
       question = message.questions.first
 
       ip = self.resolve(question.name)
 
-      if !ip
-        return DNS::Message.new(
+      if ip == false
+        DNS::Message.new(
           DNS::Header.new {|h|
             h.id = message.header.id
     
@@ -371,35 +392,42 @@ module Commands
     
           [question]
         )
-      end
+      elsif ip == nil
+        DNS::Message.new(
+          DNS::Header.new {|h|
+            h.id = message.header.id
     
-      return DNS::Message.new(
-        DNS::Header.new {|h|
-          h.id = message.header.id
+            h.type  = :RESPONSE
+            h.class = :QUERY
+          },
     
-          h.type  = :RESPONSE
-          h.class = :QUERY
-    
-          h.status = :NOERROR
-        },
-    
-        [question],
-    
-        [question].map {|question|
-          DNS::ResourceRecord.new {|r|
-            r.name  = question.name
-            r.type  = :AAAA
-            r.class = :IN
-    
-            r.ttl = 3600
-    
-            r.length = DNS::ResourceRecord::IN::AAAA.length
-            r.data   = DNS::ResourceRecord::IN::AAAA.new(ip)
+          [question]
+        )
+      else
+        DNS::Message.new(
+          DNS::Header.new {|h|
+            h.id = message.header.id
+      
+            h.type  = :RESPONSE
+            h.class = :QUERY
+          },
+      
+          [question],
+      
+          [question].map {|question|
+            DNS::ResourceRecord.new {|r|
+              r.name  = question.name
+              r.type  = :AAAA
+              r.class = :IN
+      
+              r.ttl = 3600
+      
+              r.data = DNS::ResourceRecord::IN::AAAA.new(ip)
+            }
           }
-        }
-      )
+        )
+      end
     end
-
   end
 end
 

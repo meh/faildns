@@ -51,10 +51,6 @@ class AAAA < Data
     AAAA.new(IP.parse(string))
   end
 
-  def self.length
-    16
-  end
-
   attr_reader :ip
 
   def initialize (what)
@@ -63,6 +59,10 @@ class AAAA < Data
 
   def pack
     @ip.pack
+  end
+
+  def length
+    16
   end
 
   def to_s
