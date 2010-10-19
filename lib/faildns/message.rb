@@ -68,7 +68,13 @@ class Message
     end
   end
 
-  def pack
+  def pack (fix=true)
+    begin
+    _fix if fix
+    rescue Exception => e
+    DNS.debug e
+    end
+
     result = ''
 
     result += @header.pack
@@ -93,7 +99,16 @@ class Message
   end
 
   def inspect
-    "#<DNS::Message: #{header.inspect} #{[("Questions:#{questions.inspect}" if questions.length > 0), ("Answers:#{answers.inspect}" if answers.length > 0), ("Authorities:#{authorities.inspect}" if authorities.length > 0), ("Additionals:#{additionals.inspect}" if additionals.length > 0)].compact.join(' ')}>"
+    "#<Message: #{header.inspect} #{[("Questions:#{questions.inspect}" if questions.length > 0), ("Answers:#{answers.inspect}" if answers.length > 0), ("Authorities:#{authorities.inspect}" if authorities.length > 0), ("Additionals:#{additionals.inspect}" if additionals.length > 0)].compact.join(' ')}>"
+  end
+
+  private
+
+  def _fix
+    @header.questions   = @questions.length
+    @header.answers     = @answers.length
+    @header.authorities = @authorities.length
+    @header.additionals = @additionals.length
   end
 end
 

@@ -174,7 +174,7 @@ module Commands
         end
 
         if !$data[:cache][name].exists? && $data[:cache][name].valid?
-          return
+          return false
         end
 
         if $data[:cache][name].valid? :A
@@ -218,7 +218,7 @@ module Commands
 
           if (response.header.status == :NXDOMAIN rescue false)
             $data[:cache][name].not_exists!
-            return
+            return false
           else
             $data[:cache][name].exists!
           end
@@ -241,7 +241,7 @@ module Commands
 
       ip = self.resolve(question.name.to_s)
 
-      if !ip
+      if ip == false
         return DNS::Message.new(
           DNS::Header.new {|h|
             h.id = message.header.id
@@ -250,8 +250,6 @@ module Commands
             h.class = :QUERY
     
             h.status = :NXDOMAIN
-    
-            h.questions = 1
           },
     
           [question]
@@ -266,9 +264,6 @@ module Commands
           h.class = :QUERY
     
           h.status = :NOERROR
-    
-          h.questions = 1
-          h.answers   = 1
         },
     
         [question],
@@ -295,7 +290,7 @@ module Commands
         end
 
         if !$data[:cache][name].exists? && $data[:cache][name].valid?
-          return
+          return false
         end
 
         if $data[:cache][name].valid? :AAAA
@@ -339,7 +334,7 @@ module Commands
 
           if (response.header.status == :NXDOMAIN rescue false)
             $data[:cache][name].not_exists!
-            return
+            return false
           else
             $data[:cache][name].exists!
           end
@@ -372,8 +367,6 @@ module Commands
             h.class = :QUERY
     
             h.status = :NXDOMAIN
-    
-            h.questions = 2
           },
     
           [question]
@@ -388,9 +381,6 @@ module Commands
           h.class = :QUERY
     
           h.status = :NOERROR
-    
-          h.questions = 1
-          h.answers   = 1
         },
     
         [question],
@@ -426,8 +416,6 @@ $server.register :input, lambda {|socket, message|
         h.class = :QUERY
 
         h.status = :NOTIMP
-
-        h.questions = 1
       },
 
       [question]

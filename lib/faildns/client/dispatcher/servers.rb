@@ -40,6 +40,9 @@ class Servers < Array
 
   alias << push
 
+  def inspect
+    self.join(' ')
+  end
 end
 
 end

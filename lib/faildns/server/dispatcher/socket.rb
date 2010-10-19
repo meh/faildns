@@ -90,7 +90,7 @@ class Socket
   end
 
   def inspect
-    "#<DNS::Server::Socket: (#{@type}) #{@ip}:#{@port}>"
+    "#<Socket: (#{@type}) #{@ip}:#{@port}>"
   end
 end
 

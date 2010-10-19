@@ -97,27 +97,48 @@ class SOA < Data
     result[:MNAME] = DomainName.parse(string, original)
     result[:RNAME] = DomainName.parse(string, original)
 
-    result[:SERIAL]  = string.unpack('N'); string[0, 4] = ''
-    result[:REFRESH] = string.unpack('N'); string[0, 4] = ''
-    result[:RETRY]   = string.unpack('N'); string[0, 4] = ''
-    result[:EXPIRE]  = string.unpack('N'); string[0, 4] = ''
-    result[:MINIMUM] = string.unpack('N'); string[0, 4] = ''
+    [:SERIAL, :REFRESH, :RETRY, :EXPIRE, :MINIMUM].each {|value|
+      result[value] = string.unpack('N').first; string[0, 4] = ''
+    }
 
     SOA.new(result)
   end
 
-  def initialize (data)
-    @data = data
+  def initialize (what={})
+    if !what.is_a? Hash
+      raise ArgumentError.new('You have to pass a Hash.')
+    end
+
+    @data = what
+
+    if block_given?
+      yield self
+    end
   end
 
-  def [] (name)
-    @data[name]
-  end
+  def server;      @data[:MNAME]   end
+  def responsible; @data[:RNAME]   end
+  def serial;      @data[:SERIAL]  end
+  def refresh;     @data[:REFRESH] end
+  def retry;       @data[:RETRY]   end
+  def expire;      @data[:EXPIRE]  end
+  def minimum;     @data[:MINIMUM] end
+
+  def server= (val);      @data[:MNAME] = DomainName.new(val) end
+  def responsible= (val); @data[:RNAME] = DomainName.new(val) end
+  def serial= (val);      @data[:SERIAL] = val.to_i           end
+  def refresh= (val);     @data[:REFRESH] = val.to_i          end
+  def retry= (val);       @data[:RETRY] = val.to_i            end
+  def expire= (val);      @data[:EXPIRE] = val.to_i           end
+  def minimum= (val);     @data[:MINIMUM] = val.to_i          end
 
   def pack
-    result[:MNAME].pack + result[:RNAME].pack + [result[:SERIAL]].pack('N') +
-    [result[:REFRESH]].pack('N') + [result[:RETRY]].pack('N')  + [result[:EXPIRE]].pack('N')  +
-    [result[:MINIMUM]].pack('N')
+    self.server.pack + self.responsible.pack + [self.serial].pack('N') + [self.refresh].pack('N')+
+    [self.retry].pack('N') + [self.expire].pack('N') + [self.minimum].pack('N')
+  end
+
+  def inspect
+
   end
 end
 

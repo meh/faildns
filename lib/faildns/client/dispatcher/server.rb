@@ -38,6 +38,7 @@ class Server
     @socket = UDPSocket.new
     @socket.connect(@host, @port)
 
+    @requests  = {}
     @responses = {}
   end
 
@@ -46,6 +47,8 @@ class Server
   end
 
   def send (message)
+    @requests[message.header.id] = true
+
     DNS.debug "[Client > #{self.inspect}] #{message.inspect}", { :level => 9, :separator => "\n" }
 
     @socket.print message.pack
@@ -76,17 +79,22 @@ class Server
   private
 
   def _recv (timeout, id=nil)
-    Timeout.timeout(timeout) {
-      while (msg = @socket.recvfrom(512))
-        message = Message.parse(msg[0])
+    begin
+      Timeout.timeout(timeout) {
+        while (msg = @socket.recvfrom(512))
+          message = Message.parse(msg[0])
 
-        @responses[message.header.id] = Response.new(self, message)
+          if @requests.delete(message.header.id)
+            @responses[message.header.id] = Response.new(self, message)
+          end
 
-        if id == message.header.id
-          break
+          if id == message.header.id
+            break
+          end
         end
-      end
-    }
+      }
+    rescue Timeout::Error
+    end
   end
 end
 

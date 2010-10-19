@@ -135,7 +135,7 @@ class ResourceRecord
   end
 
   def inspect
-    "#<DNS::ResourceRecord: (#{self.name} #{self.class} #{self.type} [#{self.ttl}]) #{self.data.inspect}>"
+    "#<ResourceRecord:(#{self.name} #{self.class} #{self.type} [#{self.ttl}]) #{self.data.inspect}>"
   end
 end
 

@@ -34,7 +34,7 @@ class Response
   end
 
   def inspect
-    "#<DNS::Client::Dispatcher::Server::Response: (#{server.inspect}) #{message.inspect}>"
+    "#<Response: (#{server.inspect}) #{message.inspect}>"
   end
 end
 

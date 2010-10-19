@@ -78,7 +78,7 @@ class Client
         end
       }
 
-      if result.length == options[:limit] || result.length == @servers.length
+      if result.length == options[:limit] || result.length == self.servers.length
         break
       end
     }
@@ -88,14 +88,12 @@ class Client
 
   def resolve (domain, options={})
     options = { :version => 4 }.merge(options)
-    result  = nil
-    socket  = UDPSocket.new
 
     response = self.query(Question.new {|q|
       q.name = domain
 
       q.class = :IN
-      q.type  = (options[:version] == 4) ? :A : :AAAA
+      q.type  = ((options[:version] == 4) ? :A : :AAAA)
     }, options.merge(:limit => 1, :status => [:NOERROR])).first.last rescue nil
 
     response.message.answers.find {|answer|
@@ -104,7 +102,7 @@ class Client
   end
 
   def inspect
-    "#<DNS::Client: #{servers.inspect}>"
+    "#<Client: #{servers.inspect}>"
   end
 end
 

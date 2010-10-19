@@ -98,7 +98,7 @@ class Question
   end
 
   def inspect
-    "#<DNS::Question: #{self.name} #{self.class} #{self.type}>"
+    "#<Question: #{self.name} #{self.class} #{self.type}>"
   end
 end
 
