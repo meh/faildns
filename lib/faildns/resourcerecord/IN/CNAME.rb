@@ -51,7 +51,7 @@ class CNAME < Data
   attr_reader :domain
 
   def initialize (domain)
-    @domain = domain
+    @domain = DomainName.new(domain)
   end
 
   def pack
