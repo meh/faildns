@@ -102,7 +102,7 @@ class Message
   end
 
   def inspect
-    "#<Message: #{header.inspect} #{[("Questions:#{questions.inspect}" if questions.length > 0), ("Answers:#{answers.inspect}" if answers.length > 0), ("Authorities:#{authorities.inspect}" if authorities.length > 0), ("Additionals:#{additionals.inspect}" if additionals.length > 0)].compact.join(' ')}>"
+    "#<Message: #{header.inspect} #{[("questions=#{questions.inspect}" if questions.length > 0), ("answers=#{answers.inspect}" if answers.length > 0), ("authorities=#{authorities.inspect}" if authorities.length > 0), ("additionals=#{additionals.inspect}" if additionals.length > 0)].compact.join(' ')}>"
   end
 end
 

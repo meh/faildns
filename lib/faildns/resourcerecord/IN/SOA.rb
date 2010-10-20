@@ -142,7 +142,7 @@ class SOA < Data
   end
 
   def inspect
-    "#<IN SOA: >"
+    "#<IN SOA: #{self.server}#{" (#{self.responsible})" if !self.responsible.to_s.empty?} serial=#{self.serial} refresh=#{self.refresh} retry=#{self.retry} expire=#{self.expire} minimum=#{self.minimum}>"
   end
 end
 
