@@ -51,7 +51,7 @@ class Socket
 
     if @type == :UDP && (tmp = message.pack).length > 512
       [message.additionals, message.authorities, message.answers, message.questions].each {|rr|
-        while (tmp = message.pack).length > 512 && r.pop; end
+        while (tmp = message.pack).length > 512 && rr.pop; end
 
         if tmp.length <= 512
           break

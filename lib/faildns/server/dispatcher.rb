@@ -143,26 +143,6 @@ class Dispatcher
     @intervals.delete(interval[:fiber])
   end
 
-  def connections
-    @connection.connections
-  end
-
-  def input
-    @connection.input
-  end
-
-  def output
-    @connection.output
-  end
-
-  def disconnecting
-    @connection.disconnecting
-  end
-
-  def alias (*args)
-    @event.alias(*args)
-  end
-
   def register (*args)
     @event.register(*args)
   end

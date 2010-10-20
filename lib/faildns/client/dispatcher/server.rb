@@ -17,6 +17,7 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
+require 'thread'
 require 'timeout'
 require 'socket'
 
@@ -40,6 +41,8 @@ class Server
 
     @requests  = {}
     @responses = {}
+
+    @mutex = Mutex.new
   end
 
   def send (message)
@@ -57,9 +60,11 @@ class Server
       id = id.id
     end
 
-    if !@responses.has_key? id
-      _recv(timeout, id)
-    end
+    @mutex.synchronize {
+      if !@responses.has_key? id
+        _recv(timeout, id)
+      end
+    }
 
     if (response = @responses.delete(id))
       DNS.debug "[Client < #{self.to_s}] #{response.message.inspect rescue nil}", { :level => 9, :separator => "\n" }

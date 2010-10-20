@@ -52,13 +52,13 @@ class ConnectionDispatcher
   end
 
   def read
-    reading, = IO::select @sockets.concat([@listening[:UDP], @listening[:TCP]])
+    reading, = IO::select(@sockets + [@listening[:UDP], @listening[:TCP]])
 
     if !reading
       return
     end
 
-    reading.each {|socket|
+    reading.uniq.each {|socket|
       begin
         if socket.is_a? TCPServer
             @sockets.push @listening[:TCP].accept_nonblock
