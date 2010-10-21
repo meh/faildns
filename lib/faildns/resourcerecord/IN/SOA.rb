@@ -91,6 +91,16 @@ module IN
 #++
 
 class SOA < Data
+  @@default = {
+    :RNAME => DomainName.new,
+
+    :SERIAL  => 0,
+    :REFRESH => 0,
+    :RETRY   => 0,
+    :EXPIRE  => 0,
+    :MINIMUM => 0
+  }
+
   def self._parse (string, original)
     result = {}
 
@@ -98,7 +108,7 @@ class SOA < Data
     result[:RNAME] = DomainName.parse(string, original)
 
     [:SERIAL, :REFRESH, :RETRY, :EXPIRE, :MINIMUM].each {|value|
-      result[value] = string.unpack('N').first; string[0, 4] = ''
+      result[value] = string.unpack('N').first || 0; string[0, 4] = ''
     }
 
     SOA.new(result)
@@ -109,7 +119,7 @@ class SOA < Data
       raise ArgumentError.new('You have to pass a Hash.')
     end
 
-    @data = what
+    @data = @@default.merge(what)
 
     if block_given?
       yield self

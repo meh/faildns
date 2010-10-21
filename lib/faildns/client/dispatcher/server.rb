@@ -60,11 +60,13 @@ class Server
       id = id.id
     end
 
-    @mutex.synchronize {
-      if !@responses.has_key? id
-        _recv(timeout, id)
-      end
-    }
+    if !@responses.has_key? id
+      @mutex.synchronize {
+        if !@responses.has_key? id
+          _recv(timeout, id)
+        end
+      }
+    end
 
     if (response = @responses.delete(id))
       DNS.debug "[Client < #{self.to_s}] #{response.message.inspect rescue nil}", { :level => 9, :separator => "\n" }

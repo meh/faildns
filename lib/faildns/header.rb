@@ -31,7 +31,7 @@ module DNS
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 #     |                      ID                       |
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-#     |QR|   Opcode  |AA|TC|RD|RA|   Z    |   RCODE   |
+#     |QR|   Opcode  |AA|TC|RD|RA|AD|CD|  |   RCODE   |
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 #     |                    QDCOUNT                    |
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -85,9 +85,64 @@ module DNS
 # RA              Recursion Available - this be is set or cleared in a
 #                 response, and denotes whether recursive query support is
 #                 available in the name server.
-# 
-# Z               Reserved for future use.  Must be zero in all queries
-#                 and responses.
+#
+# AD              The name server side of a security-aware recursive name server MUST
+#                 NOT set the AD bit in a response unless the name server considers all
+#                 RRsets in the Answer and Authority sections of the response to be
+#                 authentic.  The name server side SHOULD set the AD bit if and only if
+#                 the resolver side considers all RRsets in the Answer section and any
+#                 relevant negative response RRs in the Authority section to be
+#                 authentic.  The resolver side MUST follow the procedure described in
+#                 Section 5 to determine whether the RRs in question are authentic.
+#                 However, for backward compatibility, a recursive name server MAY set
+#                 the AD bit when a response includes unsigned CNAME RRs if those CNAME
+#                 RRs demonstrably could have been synthesized from an authentic DNAME
+#                 RR that is also included in the response according to the synthesis
+#                 rules described in [RFC2672].
+#
+# CD              The CD bit exists in order to allow a security-aware resolver to
+#                 disable signature validation in a security-aware name server's
+#                 processing of a particular query.
+#              
+#                 The name server side MUST copy the setting of the CD bit from a query
+#                 to the corresponding response.
+#              
+#                 The name server side of a security-aware recursive name server MUST
+#                 pass the state of the CD bit to the resolver side along with the rest
+#                 of an initiating query, so that the resolver side will know whether
+#                 it is required to verify the response data it returns to the name
+#                 server side.  If the CD bit is set, it indicates that the originating
+#                 resolver is willing to perform whatever authentication its local
+#                 policy requires.  Thus, the resolver side of the recursive name
+#                 server need not perform authentication on the RRsets in the response.
+#                 When the CD bit is set, the recursive name server SHOULD, if
+#                 possible, return the requested data to the originating resolver, even
+#                 if the recursive name server's local authentication policy would
+#                 reject the records in question.  That is, by setting the CD bit, the
+#                 originating resolver has indicated that it takes responsibility for
+#                 performing its own authentication, and the recursive name server
+#                 should not interfere.
+#              
+#                 If the resolver side implements a BAD cache (see Section 4.7) and the
+#                 name server side receives a query that matches an entry in the
+#                 resolver side's BAD cache, the name server side's response depends on
+#                 the state of the CD bit in the original query.  If the CD bit is set,
+#                 the name server side SHOULD return the data from the BAD cache; if
+#                 the CD bit is not set, the name server side MUST return RCODE 2
+#                 (server failure).
+#              
+#                 The intent of the above rule is to provide the raw data to clients
+#                 that are capable of performing their own signature verification
+#                 checks while protecting clients that depend on the resolver side of a
+#                 security-aware recursive name server to perform such checks.  Several
+#                 of the possible reasons why signature validation might fail involve
+#                 conditions that may not apply equally to the recursive name server
+#                 and the client that invoked it.  For example, the recursive name
+#                 server's clock may be set incorrectly, or the client may have
+#                 knowledge of a relevant island of security that the recursive name
+#                 server does not share.  In such cases, "protecting" a client that is
+#                 capable of performing its own signature validation from ever seeing
+#                 the "bad" data does not help the client.
 # 
 # RCODE           Response code - this 4 bit field is set as part of
 #                 responses.  The values have the following
