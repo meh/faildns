@@ -42,8 +42,6 @@ class Class
 	}
 
 	def self.parse (string)
-		string.force_encoding 'BINARY'
-
 		result = new(string.unpack('n').first)
 
 		string[0, length] = ''
