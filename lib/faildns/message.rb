@@ -25,85 +25,75 @@ require 'faildns/resourcerecord'
 module DNS
 
 class Message
-  def self.parse (string)
-    string.force_encoding 'BINARY'
-    original = string.clone
+	def self.parse (string)
+		string.force_encoding 'BINARY'
+		original = string.clone
 
-    Message.new {|m|
-      m.header = Header.parse(string)
+		Message.new {|m|
+			m.header = Header.parse(string)
 
-      1.upto(m.header.questions) {
-        m.questions << Question.parse(string, original);
-      }
+			1.upto(m.header.questions) {
+				m.questions << Question.parse(string, original);
+			}
 
-      1.upto(m.header.answers) {
-        m.answers << ResourceRecord.parse(string, original);
-      }
+			1.upto(m.header.answers) {
+				m.answers << ResourceRecord.parse(string, original);
+			}
 
-      1.upto(m.header.authorities) {
-        m.authorities << ResourceRecord.parse(string, original);
-      }
+			1.upto(m.header.authorities) {
+				m.authorities << ResourceRecord.parse(string, original);
+			}
 
-      1.upto(m.header.additionals) {
-        m.additionals << ResourceRecord.parse(string, original);
-      }
-    }
-  end
+			1.upto(m.header.additionals) {
+				m.additionals << ResourceRecord.parse(string, original);
+			}
+		}
+	end
 
-  def self.length (string)
-    string = string.clone
-  end
+	def self.length (string)
+		string = string.clone
+	end
 
-  attr_accessor :header
+	attr_accessor :header
+	attr_reader   :questions, :answers, :authorities, :additionals
 
-  attr_reader :questions, :answers, :authorities, :additionals
+	def initialize (header = nil, *args)
+		@header = header
 
-  def initialize (header=nil, *args)
-    @header = header
+		@questions   = args.shift || []
+		@answers     = args.shift || []
+		@authorities = args.shift || []
+		@additionals = args.shift || []
 
-    @questions, @answers, @authorities, @additionals = *(args.concat([[], [], [], []]))
+		yield self if block_given?
+	end
 
-    if block_given?
-      yield self
-    end
-  end
+	def pack (normalize = true)
+		self.normalize if normalize
 
-  def pack (normalize=true)
-    self.normalize if normalize
+		result = ''
 
-    result = ''
+		result << @header.pack
 
-    result += @header.pack
+		[@questions, @answers, @authorities, @additionals].each {|part|
+			part.each {|piece|
+				result << piece.pack
+			}
+		}
 
-    @questions.each {|question|
-      result += question.pack
-    }
+		result
+	end
 
-    @answers.each {|answer|
-      result += answer.pack
-    }
+	def normalize
+		@header.questions   = @questions.length
+		@header.answers     = @answers.length
+		@header.authorities = @authorities.length
+		@header.additionals = @additionals.length
+	end
 
-    @authorities.each {|authority|
-      result += answer.pack
-    }
-
-    @additionals.each {|additional|
-      result += additional.pack
-    }
-
-    return result
-  end
-
-  def normalize
-    @header.questions   = @questions.length
-    @header.answers     = @answers.length
-    @header.authorities = @authorities.length
-    @header.additionals = @additionals.length
-  end
-
-  def inspect
-    "#<Message: #{header.inspect} #{[("questions=#{questions.inspect}" if questions.length > 0), ("answers=#{answers.inspect}" if answers.length > 0), ("authorities=#{authorities.inspect}" if authorities.length > 0), ("additionals=#{additionals.inspect}" if additionals.length > 0)].compact.join(' ')}>"
-  end
+	def inspect
+		"#<Message: #{header.inspect} #{[("questions=#{questions.inspect}" if questions.length > 0), ("answers=#{answers.inspect}" if answers.length > 0), ("authorities=#{authorities.inspect}" if authorities.length > 0), ("additionals=#{additionals.inspect}" if additionals.length > 0)].compact.join(' ')}>"
+	end
 end
 
 end

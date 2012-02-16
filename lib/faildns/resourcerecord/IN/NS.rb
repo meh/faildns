@@ -32,16 +32,16 @@ module IN
 #     /                   NSDNAME                     /
 #     /                                               /
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-# 
+#
 # where:
-# 
+#
 # NSDNAME         A <domain-name> which specifies a host which should be
 #                 authoritative for the specified class and domain.
-# 
+#
 # NS records cause both the usual additional section processing to locate
 # a type A record, and, when used in a referral, a special search of the
 # zone in which they reside for glue information.
-# 
+#
 # The NS RR states that the named host should be expected to have a zone
 # starting at owner name of the specified class.  Note that the class may
 # not indicate the protocol family which should be used to communicate
@@ -51,27 +51,27 @@ module IN
 #++
 
 class NS < Data
-  def self._parse (string, original)
-    NS.new(DomainName.parse(string.clone, original))
-  end
+	def self._parse (string, original)
+		NS.new(DomainName.parse(string.clone, original))
+	end
 
-  attr_reader :domain
+	attr_reader :domain
 
-  def initialize (domain)
-    @domain = domain
-  end
+	def initialize (domain)
+		@domain = domain
+	end
 
-  def pack
-    @domain.pack
-  end
+	def pack
+		@domain.pack
+	end
 
-  def length
-    self.pack.length
-  end
+	def length
+		pack.length
+	end
 
-  def to_s
-    @domain.to_s
-  end
+	def to_s
+		@domain.to_s
+	end
 end
 
 end

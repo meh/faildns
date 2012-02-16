@@ -17,143 +17,103 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/server/dispatcher/connectiondispatcher'
-require 'faildns/server/dispatcher/eventdispatcher'
-
 module DNS
 
 class Server
 
 class Dispatcher
-  attr_reader :server, :connection, :event
+	attr_reader :server
 
-  def initialize (server)
-    @server = server
+	def initialize (server)
+		@server = server
 
-    @connection = ConnectionDispatcher.new(self)
-    @event      = EventDispatcher.new(self)
+		@pipes     = IO.pipe
+		@listening = []
+		@sockets   = []
 
-    @intervals = {}
-    @timeouts  = {}
-  end
+		@input  = []
+		@output = []
+	end
 
-  def start
-    @connection.start
+	def listen (host, port = 53, type = :udp)
+		@listening.push(if type == :upd
+			socket = UDPSocket.new
+			socket.bind(host, port)
 
-    @started = true
+			socket
+		elsif type == :tcp
+			TCPServer.new(host, port)
+		end)
+	end
 
-    @defaults = [Fiber.new {
-      while true
-        @connection.read
+	def handle (string, socket)
+		server.do(string, socket) {|string, socket|
+			begin
+				socket  = Socket.new(self, socket)
+				message = Message.parse(string)
 
-        Fiber.yield
-      end
-    }]
+				DNS.debug "[Server < #{socket.to_s}] #{message.inspect}", level: 9, separator: "\n"
 
-    self.loop
-  end
+				input socket, message
+			rescue Exception => e
+				DNS.debug e
+			end
+		}
+	end
 
-  def stop
-    if !@started
-      return
-    end
+	def start
+		@running = true
 
-    @started  = false
-    @stopping = true
+		self.loop
+	end
 
-    @event.finalize
-    @connection.finalize
+	def stop
+		@running = false
 
-    @stopping = false
-  end
+		wakeup
+	end
 
-  def loop
-    while true
-      @defaults.each {|fiber|
-        begin
-          fiber.resume
-        rescue FiberError
-          DNS.debug 'Something went deeply wrong in the dispatcher, aborting.'
-          Process::exit 23
-        rescue Exception => e
-          DNS.debug e
-        end
-      }
+	def running?
+		!!@running
+	end
 
-      @intervals.each {|fiber, meta|
-        begin
-          if !@intervals[fiber]
-            raise FiberError
-          end
+	def loop
+		self.do while running?
+	end
 
-          if meta[:at] <= Time.now
-            fiber.resume
+	def do
+		begin
+			reading, _, erroring = IO.select(@listening + @sockets, nil, @listening + @sockets)
+		rescue Errno::EBADF
+			return
+		end
 
-            meta[:at] += meta[:offset]
-          end
-        rescue FiberError
-          clearInterval meta
-        rescue Exception => e
-          DNS.debug e
-        end
-      }
+		erroring.each {|socket|
+			if socket == @pipes.first
+				socket.read_nonblock(2048) rescue nil
+			elsif @sockets.include? socket
+				@sockets.delete socket
+			elsif @listening.include? socket
+				raise 'listening socket exploded'
+			end
+		}
 
-      @timeouts.each {|fiber, meta|
-        begin
-          if !@timeouts[fiber]
-            raise FiberError
-          end
+		reading.each {|socket|
+			begin
+				if socket.is_a? TCPServer
+					@sockets.push socket.accept_nonblock
+				elsif socket.is_a? TCPSocket
+					handle socket.recv_nonblock(65535), socket
+				else
+					handle *socket.recvfrom_nonblock(512)
+				end
+			rescue Errno::EAGAIN; end
+		}
+	end
 
-          if meta[:at] <= Time.now
-            fiber.resume
-
-            clearTimeout meta
-          end
-        rescue FiberError
-          clearTimeout meta
-        rescue Exception => e
-          DNS.debug e
-        end
-      }
-    end
-  end
-
-  def setTimeout (fiber, time)
-    @timeouts[fiber] = {
-      :fiber => fiber,
-      :at  => Time.now + time,
-      :on  => Time.now,
-    }
-  end
-
-  def clearTimeout (timeout)
-    @timeouts.delete(timeout[:fiber])
-  end
-
-  def setInterval (fiber, time)
-    @intervals[fiber] = {
-      :fiber  => fiber,
-      :offset => time,
-      :at   => Time.now + time,
-      :on   => Time.now,
-    }
-  end
-
-  def clearInterval (interval)
-    @intervals.delete(interval[:fiber])
-  end
-
-  def register (*args)
-    @event.register(*args)
-  end
-
-  def dispatch (*args)
-    @event.dispatch(*args)
-  end
-
-  def execute (*args)
-    @event.execute(*args)
-  end
+	def wakeup
+		@pipes.last.write '?'
+	end
 end
 
 end

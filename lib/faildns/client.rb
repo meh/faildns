@@ -24,83 +24,89 @@ require 'faildns/client/dispatcher'
 module DNS
 
 class Client
-  attr_reader :options
+	attr_reader :options
 
-  def initialize (options={})
-    @options    = options
-    @dispatcher = Dispatcher.new(@options[:servers] || [])
+	def initialize (options = {})
+		@options    = options
+		@dispatcher = Dispatcher.new([@options[:servers]].flatten.compact)
 
-    if block_given?
-      yield self
-    end
-  end
-  
-  def servers
-    @dispatcher.servers
-  end
+		if block_given?
+			yield self
+		end
 
-  def query (message, options={})
-    options = { :timeout => 10, :tries => 3 }.merge(options)
-    result  = {}
+		if @dispatcher.servers.empty?
+			if File.readable?('/etc/resolv.conf')
+				File.read('/etc/resolv.conf').lines.each {|line|
+					line.match(/nameserver\s+(.*?)\s*$/) {
+						@dispatcher.servers << $1
+					}
+				}
+			end
+		end
+	end
 
-    if message.is_a? Question
-      message = Message.new {|m|
-        m.header = Header.new {|h|
-          h.recursive!
+	def servers
+		@dispatcher.servers
+	end
 
-          h.questions = 1
-        }
+	def query (message, options = nil)
+		options = { timeout: 10, tries: 3 }.merge(options || {})
+		result  = {}
 
-        m.questions << message
-      }
-    end
+		if message.is_a? Question
+			message = Message.new {|m|
+				m.header = Header.new {|h|
+					h.recursive!
 
-    1.upto(options[:tries]) {
-      self.servers.each {|server|
-        if result[server.to_s]
-          next
-        end
+					h.questions = 1
+				}
 
-        begin
-          server.send(message)
-          
-          response = server.recv(message.header.id, options[:timeout])
-  
-          if response && (!options[:status] || options[:status].any? {|match| response.message.header.status == match})
-            result[server.to_s] = response
-          end
-        rescue Exception => e
-          DNS.debug e
-        end
+				m.questions << message
+			}
+		end
 
-        if options[:limit] && result.length >= options[:limit]
-          break
-        end
-      }
+		1.upto(options[:tries]) {
+			servers.each {|server|
+				next if result[server.to_s]
 
-      if result.length == options[:limit] || result.length == self.servers.length
-        break
-      end
-    }
+				begin
+					server.send(message)
 
-    return result
-  end
+					response = server.recv(message.header.id, options[:timeout])
 
-  def resolve (domain, options={})
-    options = { :version => 4 }.merge(options)
+					if response && (!options[:status] || options[:status].any? { |match| response.message.header.status == match })
+						result[server.to_s] = response
+					end
+				rescue Exception => e
+					DNS.debug e
+				end
 
-    response = self.query(Question.new {|q|
-      q.name  = domain
-      q.class = :IN
-      q.type  = ((options[:version] == 4) ? :A : :AAAA)
-    }, options.merge(:limit => 1, :status => [:NOERROR])).first.last.message.answers.find {|answer|
-      answer.type == ((options[:version] == 4) ? :A : :AAAA)
-    }.data.ip rescue false
-  end
+				break if options[:limit] && result.length >= options[:limit]
+			}
 
-  def inspect
-    "#<Client: #{servers.inspect}>"
-  end
+			break if result.length == options[:limit] || result.length == self.servers.length
+		}
+
+		result
+	end
+
+	def resolve (domain, options = nil)
+		options = { version: 4 }.merge(options || {})
+
+		response = query(Question.new {|q|
+			q.name  = domain
+			q.class = :IN
+			q.type  = ((options[:version] == 4) ? :A : :AAAA)
+		}, options.merge(limit: 1, status: [:NOERROR])).first.last.message.answers.select {|answer|
+			answer.type == ((options[:version] == 4) ? :A : :AAAA)
+		}.map {|answer|
+			answer.data.ip
+		}
+	end
+
+	def inspect
+		"#<Client: #{servers.inspect}>"
+	end
 end
 
 end

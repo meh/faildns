@@ -22,18 +22,16 @@ module DNS
 class ResourceRecord
 
 class Data
-  def self.parse (string, length, original)
-    string.force_encoding 'BINARY'
+	def self.parse (string, length, original)
+		data = string[0, length]; string[0, length] = ''
 
-    data = string[0, length]; string[0, length] = ''
+		_parse(data, original)
+	end
 
-    self._parse(data, original)
-  end
+	private
 
-  private
-
-  def initialize
-  end
+	def initialize
+	end
 end
 
 end

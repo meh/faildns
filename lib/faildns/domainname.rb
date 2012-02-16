@@ -27,30 +27,30 @@ module DNS
 # high order two bits of every length octet must be zero, and the
 # remaining six bits of the length field limit the label to 63 octets or
 # less.
-# 
+#
 # To simplify implementations, the total length of a domain name (i.e.,
 # label octets and label length octets) is restricted to 255 octets or
 # less.
-# 
+#
 # Although labels can contain any 8 bit values in octets that make up a
 # label, it is strongly recommended that labels follow the preferred
 # syntax described elsewhere in this memo, which is compatible with
 # existing host naming conventions.  Name servers and resolvers must
 # compare labels in a case-insensitive manner (i.e., A=a), assuming ASCII
 # with zero parity.  Non-alphabetic codes must match exactly.
-# 
+#
 # In order to reduce the size of messages, the domain system utilizes a
 # compression scheme which eliminates the repetition of domain names in a
 # message.  In this scheme, an entire domain name or a list of labels at
 # the end of a domain name is replaced with a pointer to a prior occurance
 # of the same name.
-# 
+#
 # The pointer takes the form of a two octet sequence:
-# 
+#
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 #     | 1  1|                OFFSET                   |
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-# 
+#
 # The first two bits are ones.  This allows a pointer to be distinguished
 # from a label, since the label must begin with two zero bits because
 # labels are restricted to 63 octets or less.  (The 10 and 01 combinations
@@ -58,36 +58,36 @@ module DNS
 # the start of the message (i.e., the first octet of the ID field in the
 # domain header).  A zero offset specifies the first byte of the ID field,
 # etc.
-# 
+#
 # The compression scheme allows a domain name in a message to be
 # represented as either:
-# 
+#
 #    - a sequence of labels ending in a zero octet
-# 
+#
 #    - a pointer
-# 
+#
 #    - a sequence of labels ending with a pointer
-# 
+#
 # Pointers can only be used for occurances of a domain name where the
 # format is not class specific.  If this were not the case, a name server
 # or resolver would be required to know the format of all RRs it handled.
 # As yet, there are no such cases, but they may occur in future RDATA
 # formats.
-# 
+#
 # If a domain name is contained in a part of the message subject to a
 # length field (such as the RDATA section of an RR), and compression is
 # used, the length of the compressed name is used in the length
 # calculation, rather than the length of the expanded name.
-# 
+#
 # Programs are free to avoid using pointers in messages they generate,
 # although this will reduce datagram capacity, and may cause truncation.
 # However all programs are required to understand arriving messages that
 # contain pointers.
-# 
+#
 # For example, a datagram might need to use the domain names F.ISI.ARPA,
 # FOO.F.ISI.ARPA, ARPA, and the root.  Ignoring the other fields of the
 # message, these domain names might be represented as:
-# 
+#
 #        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 #     20 |           1           |           F           |
 #        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -101,7 +101,7 @@ module DNS
 #        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 #     30 |           A           |           0           |
 #        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-# 
+#
 #        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 #     40 |           3           |           F           |
 #        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -109,15 +109,15 @@ module DNS
 #        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 #     44 | 1  1|                20                       |
 #        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-# 
+#
 #        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 #     64 | 1  1|                26                       |
 #        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-# 
+#
 #        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 #     92 |           0           |                       |
 #        +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-# 
+#
 # The domain name for F.ISI.ARPA is shown at offset 20.  The domain name
 # FOO.F.ISI.ARPA is shown at offset 40; this definition uses a pointer to
 # concatenate a label for FOO to the previously defined F.ISI.ARPA.  The
@@ -129,91 +129,85 @@ module DNS
 #++
 
 class DomainName
-  def self.pointer (string, offset)
-    string.force_encoding 'BINARY'
+	def self.pointer (string, offset)
+		string[offset.unpack('n').first & 0x3FFF, 512]
+	end
 
-    return string[offset.unpack('n').first & 0x3FFF, 512]
-  end
+	def self.parse (string, whole)
+		result = ''
 
-  def self.parse (string, whole)
-    string.force_encoding 'BINARY'
+		case string.unpack('c').first & 0xC0
+			when 0xC0
+				result       << DomainName.parse(DomainName.pointer(whole, string), whole)
+				string[0, 2]  = ''
 
-    result = ''
+			when 0x00
+				while (length = string.unpack('c').first) != 0 && (length & 0xC0) == 0
+					result                << '.' + string[1, length]
+					string[0, length + 1]  = ''
+				end
 
-    case string.unpack('c').first & 0xC0
-      when 0xC0
-        result       += DomainName.parse(DomainName.pointer(whole, string), whole)
-        string[0, 2]  = ''
+				if length & 0xC0 == 0xC0
+					result << '.' + DomainName.parse(string, whole)
 
-      when 0x00
-        while (length = string.unpack('c').first) != 0 && (length & 0xC0) == 0
-          result                += '.' + string[1, length]
-          string[0, length + 1]  = ''
-        end
+					string[0, 2] = ''
+				else
+					string[0, 1] = ''
+				end
 
-        if length & 0xC0 == 0xC0
-          result += '.' + DomainName.parse(string, whole)
+				result[0, 1] = ''
+		end
 
-          string[0, 2] = ''
-        else
-          string[0, 1] = ''
-        end
+		DomainName.new result
+	end
 
-        result[0, 1] = ''
-    end
+	def self.length (string)
+		string = string.clone
+		result = 0
 
-    DomainName.new result
-  end
+		if string.unpack('c').first & 0xC0 == 0xC0
+			result = 2
+		else
+			while (length = string.unpack('c').first) != 0 && (length & 0xC0) == 0
+				result                += 1 + length
+				string[0, length + 1]  = ''
+			end
 
-  def self.length (string)
-    string.force_encoding 'BINARY'
+			if length & 0xC0 == 0xC0
+				result += 2
+			else
+				result += 1
+			end
+		end
 
-    string = string.clone
-    result = 0
+		result
+	end
 
-    if string.unpack('c').first & 0xC0 == 0xC0
-      return 2
-    else
-      while (length = string.unpack('c').first) != 0 && (length & 0xC0) == 0
-        result                += 1 + length
-        string[0, length + 1]  = ''
-      end
+	attr_accessor :domain
 
-      if length & 0xC0 == 0xC0
-        result += 2
-      else
-        result += 1
-      end
-    end
+	def initialize (domain=nil)
+		if domain.is_a? DomainName
+			domain = domain.domain
+		end
 
-    return result
-  end
+		@domain = domain.to_s
+	end
 
-  attr_accessor :domain
+	def to_s
+		@domain
+	end
 
-  def initialize (domain=nil)
-    if domain.is_a? DomainName
-      domain = domain.domain
-    end
+	alias to_str to_s
 
-    @domain = domain.to_s
-  end
+	def pack (options = nil)
+		result = ''
 
-  def to_s
-    @domain
-  end
+		@domain.split('.').each {|part|
+			result += [part.length].pack('c') + part
+		}
 
-  alias to_str to_s
-
-  def pack (options={})
-    result = ''
-
-    @domain.split('.').each {|part|
-      result += [part.length].pack('c') + part
-    }
-
-    result += [0].pack('c')
-  end
+		result += [0].pack('c')
+	end
 end
 
 end

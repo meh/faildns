@@ -25,36 +25,36 @@ module DNS
 # QTYPE fields appear in the question part of a query.  QTYPES are a
 # superset of TYPEs, hence all TYPEs are valid QTYPEs.  In addition, the
 # following QTYPEs are defined:
-# 
-# 
+#
+#
 # AXFR            252 A request for a transfer of an entire zone
-# 
+#
 # MAILB           253 A request for mailbox-related records (MB, MG or MR)
-# 
+#
 # MAILA           254 A request for mail agent RRs (Obsolete - see MX)
-# 
+#
 # *               255 A request for all records
 #++
 
 class QType < Type
-  Values = {
-    252 => :AXFR,
-    253 => :MAILB,
-    254 => :MAILA,
-    255 => :ANY
-  }
+	Values = {
+		252 => :AXFR,
+		253 => :MAILB,
+		254 => :MAILA,
+		255 => :ANY
+	}
 
-  def initialize (value)
-    super(value)
-  end
+	def initialize (value)
+		super(value)
+	end
 
-  def to_sym
-    Values[@value] || Type::Values[@value]
-  end
+	def to_sym
+		Values[@value] || Type::Values[@value]
+	end
 
-  def to_s
-    (Values[@value] || Type::Values[@value]).to_s
-  end
+	def to_s
+		to_sym.to_s
+	end
 end
 
 end

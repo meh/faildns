@@ -24,11 +24,11 @@ module DNS
 class Client
 
 class Dispatcher
-  attr_reader :servers
+	attr_reader :servers
 
-  def initialize (servers=[])
-    @servers = Servers.new(servers.map {|server| Server.new(server)})
-  end
+	def initialize (servers = [])
+		@servers = Servers.new(servers.map { |s| Server.new(s) })
+	end
 end
 
 end

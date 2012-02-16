@@ -29,12 +29,12 @@ module IN
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 #     /                   PTRDNAME                    /
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-# 
+#
 # where:
-# 
+#
 # PTRDNAME        A <domain-name> which points to some location in the
 #                 domain name space.
-# 
+#
 # PTR records cause no additional section processing.  These RRs are used
 # in special domains to point to some other location in the domain space.
 # These records are simple data, and don't imply any special processing
@@ -43,27 +43,27 @@ module IN
 #++
 
 class PTR < Data
-  def self._parse (string, original)
-    PTR.new(DomainName.parse(string.clone, original))
-  end
+	def self._parse (string, original)
+		PTR.new(DomainName.parse(string.clone, original))
+	end
 
-  attr_reader :domain
+	attr_reader :domain
 
-  def initialize (domain)
-    @domain = domain
-  end
+	def initialize (domain)
+		@domain = domain
+	end
 
-  def pack
-    @domain.pack
-  end
+	def pack
+		@domain.pack
+	end
 
-  def length
-    self.pack.length
-  end
+	def length
+		pack.length
+	end
 
-  def to_s
-    @domain.to_s
-  end
+	def to_s
+		@domain.to_s
+	end
 end
 
 end

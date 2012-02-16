@@ -31,49 +31,49 @@ module IN
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 #     /                       OS                      /
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-# 
+#
 # where:
-# 
+#
 # CPU             A <character-string> which specifies the CPU type.
-# 
+#
 # OS              A <character-string> which specifies the operating
 #                 system type.
-# 
+#
 # Standard values for CPU and OS can be found in [RFC-1010].
-# 
+#
 # HINFO records are used to acquire general information about a host.  The
 # main use is for protocols such as FTP that can use special procedures
 # when talking between machines or operating systems of the same type.
 #++
 
 class HINFO < Data
-  def self._parse (string, original)
-    string = string.clone
+	def self._parse (string, original)
+		string = string.clone
 
-    cpu = string[1, (tmp = string.unpack('C'))]; string[0, tmp + 1] = ''
-    os  = string[1, string.unpack('C')]
+		cpu = string[1, (tmp = string.unpack('C'))]; string[0, tmp + 1] = ''
+		os  = string[1, string.unpack('C')]
 
-    HINFO.new(cpu, os)
-  end
+		HINFO.new(cpu, os)
+	end
 
-  attr_reader :cpu, :os
+	attr_reader :cpu, :os
 
-  def initialize (cpu, os)
-    @cpu = cpu
-    @os  = os
-  end
+	def initialize (cpu, os)
+		@cpu = cpu
+		@os  = os
+	end
 
-  def pack
-    [@cpu.length].unpack('C') + @cpu + [@os.length].unpack('C') + @os
-  end
+	def pack
+		[@cpu.length].unpack('C') + @cpu + [@os.length].unpack('C') + @os
+	end
 
-  def length
-    self.pack.length
-  end
+	def length
+		pack.length
+	end
 
-  def to_s
-    "#{@os} on #{@cpu}"
-  end
+	def to_s
+		"#{@os} on #{@cpu}"
+	end
 end
 
 end

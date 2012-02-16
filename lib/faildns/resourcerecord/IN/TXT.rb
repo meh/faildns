@@ -29,39 +29,39 @@ module IN
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 #     /                   TXT-DATA                    /
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-# 
+#
 # where:
-# 
+#
 # TXT-DATA        One or more <character-string>s.
-# 
+#
 # TXT RRs are used to hold descriptive text.  The semantics of the text
 # depends on the domain where it is found.
 #++
 
 class TXT < Data
-  def self._parse (string, original)
-    data = []
+	def self._parse (string, original)
+		data = []
 
-    while !string.empty?
-      data.push(string[1, (tmp = string.unpack('C'))]); string[0, tmp + 1] = ''
-    end
+		until string.empty?
+			data.push(string[1, (tmp = string.unpack('C'))]); string[0, tmp + 1] = ''
+		end
 
-    TXT.new(data)
-  end
+		TXT.new(data)
+	end
 
-  attr_reader :data
+	attr_reader :data
 
-  def initialize (data)
-    @data = data
-  end
+	def initialize (data)
+		@data = data
+	end
 
-  def pack
-    ''
-  end
+	def pack
+		data.map { |s| [s.length, s].pack('CA*') }.join
+	end
 
-  def length
-    self.pack.length
-  end
+	def length
+		pack.length
+	end
 end
 
 end

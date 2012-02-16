@@ -30,14 +30,14 @@ module IN
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 #     |                    ADDRESS                    |
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-# 
+#
 # where:
-# 
+#
 # ADDRESS         A 32 bit Internet address.
-# 
+#
 # Hosts that have multiple Internet addresses will have multiple A
 # records.
-# 
+#
 # A records cause no additional section processing.  The RDATA section of
 # an A line in a master file is an Internet address expressed as four
 # decimal numbers separated by dots without any imbedded spaces (e.g.,
@@ -45,27 +45,27 @@ module IN
 #++
 
 class A < Data
-  def self._parse (string, original)
-    A.new(IP.parse(string))
-  end
+	def self._parse (string, original)
+		A.new(IP.parse(string))
+	end
 
-  attr_reader :ip
+	attr_reader :ip
 
-  def initialize (what)
-    @ip = IP.new(what)
-  end
+	def initialize (what)
+		@ip = IP.new(what)
+	end
 
-  def pack
-    @ip.pack
-  end
+	def pack
+		@ip.pack
+	end
 
-  def length
-    4
-  end
+	def length
+		4
+	end
 
-  def to_s
-    @ip.to_s
-  end
+	def to_s
+		@ip.to_s
+	end
 end
 
 end

@@ -25,25 +25,25 @@ class Header
 # RCODE           Response code - this 4 bit field is set as part of
 #                 responses.  The values have the following
 #                 interpretation:
-# 
+#
 #                 0               No error condition
-# 
+#
 #                 1               Format error - The name server was
 #                                 unable to interpret the query.
-# 
+#
 #                 2               Server failure - The name server was
 #                                 unable to process this query due to a
 #                                 problem with the name server.
-# 
+#
 #                 3               Name Error - Meaningful only for
 #                                 responses from an authoritative name
 #                                 server, this code signifies that the
 #                                 domain name referenced in the query does
 #                                 not exist.
-# 
+#
 #                 4               Not Implemented - The name server does
 #                                 not support the requested kind of query.
-# 
+#
 #                 5               Refused - The name server refuses to
 #                                 perform the specified operation for
 #                                 policy reasons.  For example, a name
@@ -52,70 +52,70 @@ class Header
 #                                 or a name server may not wish to perform
 #                                 a particular operation (e.g., zone
 #                                 transfer) for particular data.
-# 
+#
 #                 6-15            Reserved for future use.
 #++
 
 class Status
-  Values = {
-    0  => :NOERROR,
-    1  => :FORMERR,
-    2  => :SERVFAIL,
-    3  => :NXDOMAIN,
-    4  => :NOTIMP,
-    5  => :REFUSED,
-    6  => :YXDOMAIN,
-    7  => :YXRRSET,
-    8  => :NXRRSET,
-    9  => :NOTAUTH,
-    10 => :NOTZONE,
-    11 => :RESERVED11,
-    12 => :RESERVED12,
-    13 => :RESERVED13,
-    14 => :RESERVED14,
-    15 => :RESERVED15,
-    16 => :BADSIG,
-    17 => :BADKEY,
-    18 => :BADTIME,
-    19 => :BADMODE,
-    20 => :BADNAME,
-    21 => :BADALG,
-    22 => :BADTRUNC
-  }
+	Values = {
+		0  => :NOERROR,
+		1  => :FORMERR,
+		2  => :SERVFAIL,
+		3  => :NXDOMAIN,
+		4  => :NOTIMP,
+		5  => :REFUSED,
+		6  => :YXDOMAIN,
+		7  => :YXRRSET,
+		8  => :NXRRSET,
+		9  => :NOTAUTH,
+		10 => :NOTZONE,
+		11 => :RESERVED11,
+		12 => :RESERVED12,
+		13 => :RESERVED13,
+		14 => :RESERVED14,
+		15 => :RESERVED15,
+		16 => :BADSIG,
+		17 => :BADKEY,
+		18 => :BADTIME,
+		19 => :BADMODE,
+		20 => :BADNAME,
+		21 => :BADALG,
+		22 => :BADTRUNC
+	}
 
-  attr_reader :value
+	attr_reader :value
 
-  def initialize (value)
-    if value.is_a? Symbol
-      @value = Values.find {|key, val| val == value}.first rescue nil
-    elsif value.is_a? Integer
-      @value = value
-    else
-      @value = value.value rescue nil
-    end
+	def initialize (value)
+		if value.is_a? Symbol
+			@value = Values.find {|key, val| val == value}.first rescue nil
+		elsif value.is_a? Integer
+			@value = value
+		else
+			@value = value.value rescue nil
+		end
 
-    if !self.to_sym
-      raise ArgumentError.new('The passed value is not a suitable type.')
-    end
-  end
+		unless to_sym
+			raise ArgumentError, 'the passed value is not a suitable type.'
+		end
+	end
 
-  def == (what)
-    if what.is_a? Symbol
-      self.to_sym == what
-    elsif value.is_a? Integer
-      @value == what
-    else
-      @value == what.value rescue false
-    end
-  end
+	def == (what)
+		if what.is_a? Symbol
+			to_sym == what
+		elsif value.is_a? Integer
+			@value == what
+		else
+			@value == what.value rescue false
+		end
+	end
 
-  def to_sym
-    Values[@value]
-  end
+	def to_sym
+		Values[@value]
+	end
 
-  def to_s
-    Values[@value].to_s
-  end
+	def to_s
+		to_sym.to_s
+	end
 end
 
 end

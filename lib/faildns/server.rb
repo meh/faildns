@@ -23,53 +23,41 @@ require 'faildns/server/dispatcher'
 module DNS
 
 class Server
-  attr_reader :options, :dispatcher
+	attr_reader :options, :dispatcher
 
-  def initialize (options={})
-    if !options.is_a? Hash
-      raise ArgumentError.new('You have to pass a Hash')
-    end
+	def initialize (options = {})
+		unless options.is_a? Hash
+			raise ArgumentError, 'you have to pass a Hash'
+		end
 
-    @options = options
+		@options    = options
+		@dispatcher = Dispatcher.new(self)
+		@pool       = ThreadPool.new
 
-    @dispatcher = Dispatcher.new(self)
+		yield self if block_given?
+	end
 
-    if block_given?
-      yield self
-    end
-  end
+	def do (*args, &block)
+		@pool.process *args, &block
+	end
 
-  def start
-    if @started
-      return
-    end
+	def start
+		return if @started
 
-    @started = true
+		@started = true
 
-    @dispatcher.start
-  end
+		@dispatcher.start
+	end
 
-  def stopping
-    @stopping = true
+	def stopping
+		@stopping = true
 
-    @dispatcher.stop
-  end
+		@dispatcher.stop
+	end
 
-  def register (*args)
-    @dispatcher.event.register(*args)
-  end
-
-  def observe (*args)
-    @dispatcher.event.observe(*args)
-  end
-
-  def fire (*args)
-    @dispatcher.event.fire(*args)
-  end
-
-  def to_s
-    "#{@host}#{":#{@port}" if @port != 53}"
-  end
+	def to_s
+		"#{@host}#{":#{@port}" if @port != 53}"
+	end
 end
 
 end

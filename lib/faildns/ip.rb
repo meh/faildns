@@ -22,36 +22,37 @@ require 'ipaddr'
 module DNS
 
 class IP
-  def self.parse (string)
-    return IP.new(IPAddr.new_ntoh(string))
-  end
+	def self.parse (string)
+		return IP.new(IPAddr.new_ntoh(string))
+	end
 
-  attr_reader :version, :ip
+	attr_reader :version, :ip
 
-  def initialize (what)
-    if what.is_a?(String)
-      @ip = IPAddr.new(what.to_s)
-    elsif what.is_a?(IP)
-      @ip = what.ip
-    elsif what.is_a?(IPAddr)
-      @ip = what
-    else
-      DNS.debug what.inspect
-      raise ArgumentError.new 'wat is dis i dont even'
-    end
+	def initialize (what)
+		if what.is_a?(String)
+			@ip = IPAddr.new(what.to_s)
+		elsif what.is_a?(IP)
+			@ip = what.ip
+		elsif what.is_a?(IPAddr)
+			@ip = what
+		else
+			DNS.debug what.inspect
 
-    @version = (@ip.ipv4?) ? 4 : 6
-  end
+			raise ArgumentError, 'wat is dis i dont even'
+		end
 
-  def pack
-    @ip.hton
-  end
+		@version = (@ip.ipv4?) ? 4 : 6
+	end
 
-  def to_s
-    @ip.to_s
-  end
+	def pack
+		@ip.hton
+	end
 
-  alias to_str to_s
+	def to_s
+		@ip.to_s
+	end
+
+	alias to_str to_s
 end
 
 end

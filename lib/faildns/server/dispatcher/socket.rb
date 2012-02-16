@@ -26,76 +26,72 @@ class Dispatcher
 class ConnectionDispatcher
 
 class Socket
-  attr_reader :ip, :port, :type
+	attr_reader :dispatcher, :ip, :port, :type
 
-  def initialize (dispatcher, what)
-    @dispatcher = dispatcher
+	def initialize (dispatcher, what)
+		@dispatcher = dispatcher
 
-    if what.is_a? TCPSocket
-      @type = :TCP
-      @ip   = what.peeraddr[3]
-      @port = what.addr[1]
+		if what.is_a? TCPSocket
+			@type = :tcp
+			@ip   = what.peeraddr[3]
+			@port = what.addr[1]
 
-      @socket = what
-    else
-      @type = :UDP
-      @ip   = what[3]
-      @port = what[1]
+			@socket = what
+		else
+			@type = :udp
+			@ip   = what[3]
+			@port = what[1]
 
-      @socket = dispatcher.connection.listening[:UDP]
-    end
-  end
+			@socket = UDPSocket.new
+		end
+	end
 
-  def send (message, close=true)
-    @dispatcher.dispatch :output, self, message
+	def send (message, close = true)
+		@dispatcher.output self, message
 
-    if @type == :UDP && (tmp = message.pack).length > 512
-      [message.additionals, message.authorities, message.answers, message.questions].each {|rr|
-        while (tmp = message.pack).length > 512 && rr.pop; end
+		if @type == :udp && (tmp = message.pack).length > 512
+			[message.additionals, message.authorities, message.answers, message.questions].each {|rr|
+				while (tmp = message.pack).length > 512 && rr.pop; end
 
-        if tmp.length <= 512
-          break
-        end
-      }
+				break if tmp.length <= 512
+			}
 
-      message.header.questions   = message.questions.length
-      message.header.answers     = message.answers.length
-      message.header.authorities = message.authorities.length
-      message.header.additionals = message.additionals.length
+			message.header.questions   = message.questions.length
+			message.header.answers     = message.answers.length
+			message.header.authorities = message.authorities.length
+			message.header.additionals = message.additionals.length
 
-      message.header.truncated!
+			message.header.truncated!
 
-      data = message.pack
-    else
-      data = tmp
-    end
+			data = message.pack
+		else
+			data = tmp
+		end
 
-    DNS.debug "[Server > #{self.to_s}] #{message.inspect}", { :level => 9, :separator => "\n" }
+		DNS.debug "[Server > #{self.to_s}] #{message.inspect}", { level: 9, separator: "\n" }
 
-    if @socket.is_a? TCPSocket
-      @socket.send_nonblock(data)
+		if @socket.is_a? TCPSocket
+			@socket.send_nonblock(data)
 
-      if close
-        @socket.close
-      end
-    else
-      @socket.send(data, 0, ::Socket.pack_sockaddr_in(@port, @ip))
-    end
-  end
+			@socket.close if close
+		else
+			@socket.send(data, 0, ::Socket.pack_sockaddr_in(@port, @ip))
+		end
+	end
 
-  def close
-    if @socket.is_a? TCPSocket
-      @socket.close
-    end
-  end
+	def close
+		if @socket.is_a? TCPSocket
+			@socket.close
+		end
+	end
 
-  def to_s
-    "#{@ip}:#{@port}"
-  end
+	def to_s
+		"#{@ip}:#{@port}"
+	end
 
-  def inspect
-    "#<Socket: (#{@type}) #{@ip}:#{@port}>"
-  end
+	def inspect
+		"#<Socket: (#{@type}) #{@ip}:#{@port}>"
+	end
 end
 
 end

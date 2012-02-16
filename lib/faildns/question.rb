@@ -27,7 +27,7 @@ module DNS
 # The question section is used to carry the "question" in most queries,
 # i.e., the parameters that define what is being asked.  The section
 # contains QDCOUNT (usually 1) entries, each of the following format:
-# 
+#
 #                                     1  1  1  1  1  1
 #       0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -39,67 +39,65 @@ module DNS
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 #     |                     QCLASS                    |
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-# 
+#
 # where:
-# 
+#
 # QNAME           a domain name represented as a sequence of labels, where
 #                 each label consists of a length octet followed by that
 #                 number of octets.  The domain name terminates with the
 #                 zero length octet for the null label of the root.  Note
 #                 that this field may be an odd number of octets; no
 #                 padding is used.
-# 
+#
 # QTYPE           a two octet code which specifies the type of the query.
 #                 The values for this field include all codes valid for a
 #                 TYPE field, together with some more general codes which
 #                 can match more than one type of RR.
-# 
+#
 # QCLASS          a two octet code that specifies the class of the query.
 #                 For example, the QCLASS field is IN for the Internet.
 #++
 
 class Question
-  def self.parse (string, original)
-    Question.new {|q|
-      q.name  = DomainName.parse(string, original);
-      q.type  = QType.parse(string);
-      q.class = QClass.parse(string);
-    }
-  end
+	def self.parse (string, original)
+		Question.new {|q|
+			q.name  = DomainName.parse(string, original);
+			q.type  = QType.parse(string);
+			q.class = QClass.parse(string);
+		}
+	end
 
-  def self.length (string)
-    DomainName.length(string) + QType.length + QClass.length
+	def self.length (string)
+		DomainName.length(string) + QType.length + QClass.length
+	end
 
-    return result
-  end
+	def initialize (what = {})
+		unless what.is_a? Hash
+			raise ArgumentError, 'you have to pass a Hash.'
+		end
 
-  def initialize (what={})
-    if !what.is_a? Hash
-      raise ArgumentError.new('You have to pass a Hash.')
-    end
+		@data = what
 
-    @data = what
+		yield self if block_given?
+	end
 
-    if block_given?
-      yield self
-    end
-  end
+	def name;  @data[:QNAME]  end
+	def type;  @data[:QTYPE]  end
+	def class; @data[:QCLASS] end
 
-  def name;  @data[:QNAME]  end
-  def type;  @data[:QTYPE]  end
-  def class; @data[:QCLASS] end
+	def name= (val);  @data[:QNAME]  = DomainName.new(val); end
+	def type= (val);  @data[:QTYPE]  = QType.new(val);      end
+	def class= (val); @data[:QCLASS] = QClass.new(val);     end
 
-  def name= (val);  @data[:QNAME]  = DomainName.new(val) end
-  def type= (val);  @data[:QTYPE]  = QType.new(val)      end
-  def class= (val); @data[:QCLASS] = QClass.new(val)     end
+	alias klass class
 
-  def pack
-    self.name.pack + self.type.pack + self.class.pack
-  end
+	def pack
+		name.pack + type.pack + klass.pack
+	end
 
-  def inspect
-    "#<Question: #{self.name} #{self.class} #{self.type}>"
-  end
+	def inspect
+		"#<Question: #{name} #{klass} #{type}>"
+	end
 end
 
 end

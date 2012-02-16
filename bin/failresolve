@@ -18,20 +18,30 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
+require 'optparse'
 require 'faildns/client'
-require 'optimus'
 
-opt = Optimus.new {|o|
-  o.set(
-    :type => :array,
+options = {}
 
-    :long  => 'servers',
-    :short => 's'
-  )
-}
+OptionParser.new do |o|
+	o.on '-s', '--servers', Array, 'the servers to use to resolve' do |value|
+		options[:servers] = value
+	end
+end.parse!
 
-client = DNS::Client.new(:servers => opt.params[:s])
+client = DNS::Client.new(:servers => options[:servers])
 
-opt.args.each {|arg|
-  puts "#{arg}: #{client.resolve(arg)} (#{client.resolve(arg, { :version => 6 })})"
+ARGV.each {|arg|
+	ipv4 = client.resolve(arg)
+	ipv6 = client.resolve(arg, version: 6)
+
+	if ipv4.length == 1
+		puts "#{arg}: #{ipv4.first}#{" (#{ipv6.first})" if ipv6.first}"
+	else
+		puts "#{arg}: #{ipv4.shift}"
+
+		ipv4.each {|ip|
+			puts "#{' ' * (arg.length + 2)}#{ip}"
+		}
+	end
 }

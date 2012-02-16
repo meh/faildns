@@ -47,37 +47,37 @@ module IN
 #     |                    MINIMUM                    |
 #     |                                               |
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-# 
+#
 # where:
-# 
+#
 # MNAME           The <domain-name> of the name server that was the
 #                 original or primary source of data for this zone.
-# 
+#
 # RNAME           A <domain-name> which specifies the mailbox of the
 #                 person responsible for this zone.
-# 
+#
 # SERIAL          The unsigned 32 bit version number of the original copy
 #                 of the zone.  Zone transfers preserve this value.  This
 #                 value wraps and should be compared using sequence space
 #                 arithmetic.
-# 
+#
 # REFRESH         A 32 bit time interval before the zone should be
 #                 refreshed.
-# 
+#
 # RETRY           A 32 bit time interval that should elapse before a
 #                 failed refresh should be retried.
-# 
+#
 # EXPIRE          A 32 bit time value that specifies the upper limit on
 #                 the time interval that can elapse before the zone is no
 #                 longer authoritative.
-# 
+#
 # MINIMUM         The unsigned 32 bit minimum TTL field that should be
 #                 exported with any RR from this zone.
-# 
+#
 # SOA records cause no additional section processing.
-# 
+#
 # All times are in units of seconds.
-# 
+#
 # Most of these fields are pertinent only for name server maintenance
 # operations.  However, MINIMUM is used in all query operations that
 # retrieve RRs from a zone.  Whenever a RR is sent in a response to a
@@ -91,69 +91,67 @@ module IN
 #++
 
 class SOA < Data
-  @@default = {
-    :RNAME => DomainName.new,
+	Default = {
+		RNAME: DomainName.new,
 
-    :SERIAL  => 0,
-    :REFRESH => 0,
-    :RETRY   => 0,
-    :EXPIRE  => 0,
-    :MINIMUM => 0
-  }
+		SERIAL:  0,
+		REFRESH: 0,
+		RETRY:   0,
+		EXPIRE:  0,
+		MINIMUM: 0
+	}
 
-  def self._parse (string, original)
-    result = {}
+	def self._parse (string, original)
+		result = {}
 
-    result[:MNAME] = DomainName.parse(string, original)
-    result[:RNAME] = DomainName.parse(string, original)
+		result[:MNAME] = DomainName.parse(string, original)
+		result[:RNAME] = DomainName.parse(string, original)
 
-    [:SERIAL, :REFRESH, :RETRY, :EXPIRE, :MINIMUM].each {|value|
-      result[value] = string.unpack('N').first || 0; string[0, 4] = ''
-    }
+		[:SERIAL, :REFRESH, :RETRY, :EXPIRE, :MINIMUM].each {|value|
+			result[value] = string.unpack('N').first || 0; string[0, 4] = ''
+		}
 
-    SOA.new(result)
-  end
+		SOA.new(result)
+	end
 
-  def initialize (what={})
-    if !what.is_a? Hash
-      raise ArgumentError.new('You have to pass a Hash.')
-    end
+	def initialize (what = {})
+		unless what.is_a? Hash
+			raise ArgumentError, 'you have to pass a Hash.'
+		end
 
-    @data = @@default.merge(what)
+		@data = Default.merge(what)
 
-    if block_given?
-      yield self
-    end
-  end
+		yield self if block_given?
+	end
 
-  def server;      @data[:MNAME]   end
-  def responsible; @data[:RNAME]   end
-  def serial;      @data[:SERIAL]  end
-  def refresh;     @data[:REFRESH] end
-  def retry;       @data[:RETRY]   end
-  def expire;      @data[:EXPIRE]  end
-  def minimum;     @data[:MINIMUM] end
+	def server;      @data[:MNAME]   end
+	def responsible; @data[:RNAME]   end
+	def serial;      @data[:SERIAL]  end
+	def refresh;     @data[:REFRESH] end
+	def retry;       @data[:RETRY]   end
+	def expire;      @data[:EXPIRE]  end
+	def minimum;     @data[:MINIMUM] end
 
-  def server= (val);      @data[:MNAME]   = DomainName.new(val) end
-  def responsible= (val); @data[:RNAME]   = DomainName.new(val) end
-  def serial= (val);      @data[:SERIAL]  = val.to_i            end
-  def refresh= (val);     @data[:REFRESH] = val.to_i            end
-  def retry= (val);       @data[:RETRY]   = val.to_i            end
-  def expire= (val);      @data[:EXPIRE]  = val.to_i            end
-  def minimum= (val);     @data[:MINIMUM] = val.to_i            end
+	def server= (val);      @data[:MNAME]   = DomainName.new(val); end
+	def responsible= (val); @data[:RNAME]   = DomainName.new(val); end
+	def serial= (val);      @data[:SERIAL]  = val.to_i;            end
+	def refresh= (val);     @data[:REFRESH] = val.to_i;            end
+	def retry= (val);       @data[:RETRY]   = val.to_i;            end
+	def expire= (val);      @data[:EXPIRE]  = val.to_i;            end
+	def minimum= (val);     @data[:MINIMUM] = val.to_i;            end
 
-  def pack
-    self.server.pack + self.responsible.pack + [self.serial].pack('N') + [self.refresh].pack('N')+
-    [self.retry].pack('N') + [self.expire].pack('N') + [self.minimum].pack('N')
-  end
+	def pack
+		server.pack + responsible.pack + [serial].pack('N') + [refresh].pack('N') +
+			[self.retry].pack('N') + [expire].pack('N') + [minimum].pack('N')
+	end
 
-  def length
-    self.pack.length
-  end
+	def length
+		pack.length
+	end
 
-  def inspect
-    "#<IN SOA: #{self.server}#{" (#{self.responsible})" if !self.responsible.to_s.empty?} serial=#{self.serial} refresh=#{self.refresh} retry=#{self.retry} expire=#{self.expire} minimum=#{self.minimum}>"
-  end
+	def inspect
+		"#<IN SOA: #{server}#{" (#{responsible})" if !responsible.to_s.empty?} serial=#{serial} refresh=#{refresh} retry=#{self.retry} expire=#{expire} minimum=#{minimum}>"
+	end
 end
 
 end

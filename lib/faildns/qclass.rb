@@ -30,22 +30,22 @@ module DNS
 #++
 
 class QClass < Class
-  Values = {
-    254 => :NONE,
-    255 => :ANY
-  }
+	Values = {
+		254 => :NONE,
+		255 => :ANY
+	}
 
-  def initialize (value)
-    super(value)
-  end
+	def initialize (value)
+		super(value)
+	end
 
-  def to_sym
-    Values[@value] || Class::Values[@value]
-  end
+	def to_sym
+		Values[@value] || Class::Values[@value]
+	end
 
-  def to_s
-    (Values[@value] || Class::Values[@value]).to_s
-  end
+	def to_s
+		to_sym.to_s
+	end
 end
 
 end

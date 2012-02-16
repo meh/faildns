@@ -17,32 +17,6 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/version'
-
 module DNS
-	def self.debug (argument, options={})
-		return unless ENV['FAILDNS_DEBUG']
-
-		return if ENV['FAILDNS_DEBUG'].to_i < (options[:level] || 1)
-
-		output = "[#{Time.new}] From: #{caller[0, options[:deep] || 1].join("\n")}\n"
-
-		if argument.is_a?(Exception)
-			output << "#{argument.class}: #{argument.message}\n"
-			output << argument.backtrace.collect {|stack|
-				stack
-			}.join("\n")
-			output << "\n\n"
-		elsif argument.is_a?(String)
-			output << "#{argument}\n"
-		else
-			output << "#{argument.inspect}\n"
-		end
-
-		if options[:separator]
-			output << options[:separator]
-		end
-
-		puts output
-	end
+	VERSION = '0.0.2'
 end

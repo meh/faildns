@@ -26,16 +26,16 @@ class Dispatcher
 class Server
 
 class Response
-  attr_reader :server, :message
+	attr_reader :server, :message
 
-  def initialize (server, message)
-    @server  = server
-    @message = message
-  end
+	def initialize (server, message)
+		@server  = server
+		@message = message
+	end
 
-  def inspect
-    "#<Response: (#{server.inspect}) #{message.inspect}>"
-  end
+	def inspect
+		"#<Response: (#{server.inspect}) #{message.inspect}>"
+	end
 end
 
 end

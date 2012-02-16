@@ -32,39 +32,39 @@ module IN
 #     /                     CNAME                     /
 #     /                                               /
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
-# 
+#
 # where:
-# 
+#
 # CNAME           A <domain-name> which specifies the canonical or primary
 #                 name for the owner.  The owner name is an alias.
-# 
+#
 # CNAME RRs cause no additional section processing, but name servers may
 # choose to restart the query at the canonical name in certain cases.  See
 # the description of name server logic in [RFC-1034] for details.
 #++
 
 class CNAME < Data
-  def self._parse (string, original)
-    CNAME.new(DomainName.parse(string.clone, original))
-  end
+	def self._parse (string, original)
+		CNAME.new(DomainName.parse(string.clone, original))
+	end
 
-  attr_reader :domain
+	attr_reader :domain
 
-  def initialize (domain)
-    @domain = DomainName.new(domain)
-  end
+	def initialize (domain)
+		@domain = DomainName.new(domain)
+	end
 
-  def pack
-    @domain.pack
-  end
+	def pack
+		@domain.pack
+	end
 
-  def length
-    self.pack.length
-  end
+	def length
+		pack.length
+	end
 
-  def to_s
-    @domain.to_s
-  end
+	def to_s
+		@domain.to_s
+	end
 end
 
 end

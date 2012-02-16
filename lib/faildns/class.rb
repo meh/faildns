@@ -22,75 +22,76 @@ module DNS
 #--
 # CLASS fields appear in resource records.  The following CLASS mnemonics
 # and values are defined:
-# 
+#
 # IN              1 the Internet
-# 
+#
 # CS              2 the CSNET class (Obsolete - used only for examples in
 #                 some obsolete RFCs)
-# 
+#
 # CH              3 the CHAOS class
-# 
+#
 # HS              4 Hesiod [Dyer 87]
 #++
 
 class Class
-  Values = {
-    1 => :IN,
-    2 => :CS,
-    3 => :CH,
-    4 => :HS
-  }
+	Values = {
+		1 => :IN,
+		2 => :CS,
+		3 => :CH,
+		4 => :HS
+	}
 
-  def self.parse (string)
-    string.force_encoding 'BINARY'
+	def self.parse (string)
+		string.force_encoding 'BINARY'
 
-    result = self.new(string.unpack('n').first)
-    string[0, self.length] = ''
+		result = new(string.unpack('n').first)
 
-    return result
-  end
+		string[0, length] = ''
 
-  def self.length (string=nil)
-    2
-  end
+		result
+	end
 
-  attr_reader :value
+	def self.length (string = nil)
+		2
+	end
 
-  def initialize (value)
-    if value.is_a? Symbol
-      @value = Values.find {|key, val| val == value}.first rescue nil
-    elsif value.is_a? Integer
-      @value = value
-    else
-      @value = value.value rescue nil
-    end
+	attr_reader :value
 
-    if !self.to_sym
-      raise ArgumentError.new('The passed value is not a suitable class.')
-    end
-  end
+	def initialize (value)
+		if value.is_a? Symbol
+			@value = Values.key(value)
+		elsif value.is_a? Integer
+			@value = value
+		else
+			@value = value.value rescue nil
+		end
 
-  def pack
-    [@value].pack('n')
-  end
+		unless to_sym
+			raise ArgumentError, 'the passed value is not a suitable class'
+		end
+	end
 
-  def == (what)
-    if what.is_a? Symbol
-      self.to_sym == what
-    elsif value.is_a? Integer
-      @value == what
-    else
-      @value == what.value rescue false
-    end
-  end
+	def pack
+		[@value].pack('n')
+	end
 
-  def to_sym
-    Values[@value]
-  end
+	def == (what)
+		if what.is_a? Symbol
+			to_sym == what
+		elsif value.is_a? Integer
+			@value == what
+		else
+			@value == what.value rescue false
+		end
+	end
 
-  def to_s
-    Values[@value].to_s
-  end
+	def to_sym
+		Values[@value]
+	end
+
+	def to_s
+		to_sym.to_s
+	end
 end
 
 end

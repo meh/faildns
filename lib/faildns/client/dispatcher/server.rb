@@ -30,75 +30,70 @@ class Client
 class Dispatcher
 
 class Server
-  attr_reader :host, :port
+	attr_reader :host, :port
 
-  def initialize (host, port=53)
-    @host = host
-    @port = port
+	def initialize (host, port=53)
+		@host = host
+		@port = port
 
-    @socket = UDPSocket.new
-    @socket.connect(@host, @port)
+		@socket = UDPSocket.new
+		@socket.connect(@host, @port)
 
-    @requests  = {}
-    @responses = {}
+		@requests  = {}
+		@responses = {}
 
-    @mutex = Mutex.new
-  end
+		@mutex = Mutex.new
+	end
 
-  def send (message)
-    @requests[message.header.id] = true
+	def send (message)
+		@requests[message.header.id] = true
 
-    DNS.debug "[Client > #{self.to_s}] #{message.inspect}", { :level => 9, :separator => "\n" }
+		DNS.debug "[Client > #{self.to_s}] #{message.inspect}", { :level => 9, :separator => "\n" }
 
-    @socket.print message.pack
-  end
+		@socket.print message.pack
+	end
 
-  def recv (id, timeout=10)
-    if id.is_a? Message
-      id = id.header.id
-    elsif id.is_a? Header
-      id = id.id
-    end
+	def recv (id, timeout=10)
+		if id.is_a? Message
+			id = id.header.id
+		elsif id.is_a? Header
+			id = id.id
+		end
 
-    if !@responses.has_key? id
-      @mutex.synchronize {
-        if !@responses.has_key? id
-          _recv(timeout, id)
-        end
-      }
-    end
+		if !@responses.has_key? id
+			@mutex.synchronize {
+				if !@responses.has_key? id
+					_recv(timeout, id)
+				end
+			}
+		end
 
-    if (response = @responses.delete(id))
-      DNS.debug "[Client < #{self.to_s}] #{response.message.inspect rescue nil}", { :level => 9, :separator => "\n" }
-    end
+		if (response = @responses.delete(id))
+			DNS.debug "[Client < #{self.to_s}] #{response.message.inspect rescue nil}", { :level => 9, :separator => "\n" }
+		end
 
-    return response
-  end
+		return response
+	end
 
-  def to_s
-    "#{@host}#{":#{@port}" if @port != 53}"
-  end
+	def to_s
+		"#{@host}#{":#{@port}" if @port != 53}"
+	end
 
-  private
+private
+	def _recv (timeout, id = nil)
+		Timeout.timeout(timeout) {
+			while (msg = @socket.recvfrom(512) rescue nil)
+				message = Message.parse(msg[0])
 
-  def _recv (timeout, id=nil)
-    begin
-      Timeout.timeout(timeout) {
-        while (msg = @socket.recvfrom(512) rescue nil)
-          message = Message.parse(msg[0])
+				if @requests.delete(message.header.id)
+					@responses[message.header.id] = Response.new(self, message)
+				end
 
-          if @requests.delete(message.header.id)
-            @responses[message.header.id] = Response.new(self, message)
-          end
-
-          if id == message.header.id
-            break
-          end
-        end
-      }
-    rescue Timeout::Error
-    end
-  end
+				break if id == message.header.id
+			end
+		}
+	rescue Timeout::Error
+	end
 end
 
 end

@@ -26,23 +26,21 @@ class Client
 class Dispatcher
 
 class Servers < Array
-  def initialize (*args)
-    super(*args)
+	def initialize (*)
+		super
 
-    @data = {}
-  end
+		@data = {}
+	end
 
-  alias __push push
+	def push (server)
+		super(Server.new(server))
+	end
 
-  def push (server)
-    __push(Server.new(server))
-  end
+	alias << push
 
-  alias << push
-
-  def inspect
-    self.join(' ')
-  end
+	def inspect
+		self.join(' ')
+	end
 end
 
 end
