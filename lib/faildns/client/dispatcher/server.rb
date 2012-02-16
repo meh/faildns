@@ -53,7 +53,7 @@ class Server
 		@socket.print message.pack
 	end
 
-	def recv (id, timeout=10)
+	def recv (id, timeout = 10)
 		if id.is_a? Message
 			id = id.header.id
 		elsif id.is_a? Header

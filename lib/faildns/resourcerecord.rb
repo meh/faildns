@@ -76,9 +76,6 @@ module DNS
 
 class ResourceRecord
 	def self.parse (string, original)
-		string = string.dup
-		string.force_encoding 'BINARY'
-
 		ResourceRecord.new {|r|
 			r.name  = DomainName.parse(string, original)
 			r.type  = Type.parse(string)
