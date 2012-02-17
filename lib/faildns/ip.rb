@@ -22,8 +22,16 @@ require 'ipaddr'
 module DNS
 
 class IP
+	def self.valid? (string)
+		IPAddr.new(string)
+
+		true
+	rescue
+		false
+	end
+
 	def self.parse (string)
-		return IP.new(IPAddr.new_ntoh(string))
+		IP.new(IPAddr.new_ntoh(string))
 	end
 
 	attr_reader :version, :ip

@@ -26,11 +26,9 @@ class Dispatcher
 class ConnectionDispatcher
 
 class Socket
-	attr_reader :dispatcher, :ip, :port, :type
+	attr_reader :ip, :port, :type
 
 	def initialize (dispatcher, what)
-		@dispatcher = dispatcher
-
 		if what.is_a? TCPSocket
 			@type = :tcp
 			@ip   = what.peeraddr[3]
@@ -47,8 +45,6 @@ class Socket
 	end
 
 	def send (message, close = true)
-		@dispatcher.output self, message
-
 		if @type == :udp && (tmp = message.pack).length > 512
 			[message.additionals, message.authorities, message.answers, message.questions].each {|rr|
 				while (tmp = message.pack).length > 512 && rr.pop; end
@@ -68,7 +64,7 @@ class Socket
 			data = tmp
 		end
 
-		DNS.debug "[Server > #{self.to_s}] #{message.inspect}", { level: 9, separator: "\n" }
+		DNS.debug "[Server > #{to_s}] #{message.inspect}", level: 9, separator: "\n"
 
 		if @socket.is_a? TCPSocket
 			@socket.send_nonblock(data)
@@ -80,7 +76,7 @@ class Socket
 	end
 
 	def close
-		if @socket.is_a? TCPSocket
+		if type == :tcp
 			@socket.close
 		end
 	end

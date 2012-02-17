@@ -23,7 +23,10 @@ require 'faildns/server/dispatcher'
 module DNS
 
 class Server
-	attr_reader :options, :dispatcher
+	extend Forwardable
+
+	attr_reader    :options, :dispatcher
+	def_delegators :@dispatcher, :listen
 
 	def initialize (options = {})
 		unless options.is_a? Hash

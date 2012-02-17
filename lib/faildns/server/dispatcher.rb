@@ -35,7 +35,31 @@ class Dispatcher
 		@output = []
 	end
 
-	def listen (host, port = 53, type = :udp)
+	def input (*args, &block)
+		if block
+			@input.push(block)
+		else
+			server.do(@input) {|blocks|
+				blocks.each { |b| b.call(*args) }
+			}
+		end
+	end
+
+	def output (*args, &block)
+		if block
+			@output.push(block)
+		else
+			server.do(@output) {|blocks|
+				blocks.each { |b| b.call(*args) }
+			}
+		end
+	end
+
+	def listens_on
+		@listening
+	end
+
+	def listen (type = :upd, host, port)
 		@listening.push(if type == :upd
 			socket = UDPSocket.new
 			socket.bind(host, port)
@@ -49,12 +73,16 @@ class Dispatcher
 	def handle (string, socket)
 		server.do(string, socket) {|string, socket|
 			begin
-				socket  = Socket.new(self, socket)
-				message = Message.parse(string)
+				socket   = Socket.new(socket)
+				message  = Message.parse(string)
+				response = Message.new
 
 				DNS.debug "[Server < #{socket.to_s}] #{message.inspect}", level: 9, separator: "\n"
 
-				input socket, message
+				input  socket, message, response
+				output socket, response
+
+				socket.send response
 			rescue Exception => e
 				DNS.debug e
 			end
@@ -64,7 +92,7 @@ class Dispatcher
 	def start
 		@running = true
 
-		self.loop
+		loop
 	end
 
 	def stop
