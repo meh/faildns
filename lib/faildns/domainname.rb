@@ -198,7 +198,7 @@ class DomainName
 	hash_on :@domain
 
 	def to_s
-		@domain
+		SimpleIDN.to_unicode(@domain)
 	end
 
 	alias to_str to_s
@@ -206,7 +206,7 @@ class DomainName
 	def pack (options = nil)
 		result = ''
 
-		@domain.split('.').each {|part|
+		SimpleIDN.to_ascii(@domain).split('.').each {|part|
 			result += [part.length].pack('c') + part
 		}
 

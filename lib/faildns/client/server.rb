@@ -44,7 +44,7 @@ class Server
 	def send (message)
 		@requests[message.header.id] = true
 
-		DNS.debug "[Client > #{self.to_s}] #{message.inspect}", level: 9, separator: "\n"
+		DNS.debug "[Client > #{to_s}] #{message.inspect}", level: 9, separator: "\n"
 
 		@socket.print message.pack
 	end
@@ -58,17 +58,17 @@ class Server
 
 		if !@responses.has_key? id
 			@mutex.synchronize {
-				if !@responses.has_key? id
-					_recv(timeout, id)
-				end
+				_recv timeout, id unless @responses.has_key? id
 			}
 		end
 
-		if (response = @responses.delete(id))
-			DNS.debug "[Client < #{self.to_s}] #{response.message.inspect rescue nil}", level: 9, separator: "\n"
+		response = @responses.delete(id)
+
+		if response
+			DNS.debug "[Client < #{to_s}] #{response.message.inspect rescue nil}", level: 9, separator: "\n"
 		end
 
-		return response
+		response
 	end
 
 	def to_s

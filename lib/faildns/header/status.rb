@@ -87,7 +87,7 @@ class Status
 
 	def initialize (value)
 		if value.is_a? Symbol
-			@internal = Values.find {|key, val| val == value}.first rescue nil
+			@internal = Values.key(value)
 		elsif value.is_a? Integer
 			@internal = value
 		else
@@ -99,7 +99,7 @@ class Status
 		end
 	end
 
-	hash_on :to_i
+	hash_on :@internal
 
 	def == (what)
 		if what.is_a? Symbol

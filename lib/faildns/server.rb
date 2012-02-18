@@ -17,7 +17,8 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/common'
+require 'faildns/message'
+
 require 'faildns/server/dispatcher'
 
 module DNS

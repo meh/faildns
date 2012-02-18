@@ -63,22 +63,18 @@ class Client
 			servers.each {|server|
 				next if result[server.to_s]
 
-				begin
-					server.send(message)
+				server.send(message)
 
-					response = server.recv(message.header.id, options[:timeout])
+				response = server.recv(message.header.id, options[:timeout])
 
-					if response && (!options[:status] || options[:status].any? { |match| response.message.header.status == match })
-						result[server.to_s] = response
-					end
-				rescue Exception => e
-					DNS.debug e
+				if response && (!options[:status] || options[:status].any? { |match| response.message.header.status == match })
+					result[server.to_s] = response
 				end
 
 				break if options[:limit] && result.length >= options[:limit]
 			}
 
-			break if result.length == options[:limit] || result.length == self.servers.length
+			break if result.length == options[:limit] || result.length == servers.length
 		}
 
 		result
@@ -91,7 +87,11 @@ class Client
 			q.name  = domain
 			q.class = :IN
 			q.type  = ((options[:version] == 4) ? :A : :AAAA)
-		}, options.merge(limit: 1, status: [:NOERROR]))
+		}, options.merge(limit: 1, status: [:NOERROR, :NXDOMAIN]))
+
+		response.dup.each {|name, r|
+			response.delete(name) if r.message.header.status == :NXDOMAIN
+		}
 
 		return if response.empty?
 
@@ -101,7 +101,7 @@ class Client
 	end
 
 	def inspect
-		"#<Client: #{servers.inspect}>"
+		"#<DNS::Client: #{servers.inspect}>"
 	end
 end
 

@@ -48,7 +48,7 @@ class Type
 		end
 	end
 
-	hash_on :to_i
+	hash_on :@internal
 
 	def == (what)
 		if what.is_a? Symbol

@@ -159,10 +159,10 @@ class Type
 		end
 	end
 
-	hash_on :to_i
+	hash_on :@internal
 
 	def pack
-		[to_i].pack('n')
+		[@internal].pack('n')
 	end
 
 	def == (what)

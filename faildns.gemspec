@@ -15,6 +15,7 @@ Gem::Specification.new {|s|
 	s.require_paths = ['lib']
 
 	s.add_dependency 'threadpool'
+	s.add_dependency 'simpleidn'
 
 	s.add_development_dependency 'rake'
 	s.add_development_dependency 'rspec'
