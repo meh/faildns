@@ -104,8 +104,8 @@ class SOA < Data
 	def self._unpack (string, original)
 		result = {}
 
-		result[:MNAME] = DomainName.parse(string, original)
-		result[:RNAME] = DomainName.parse(string, original)
+		result[:MNAME] = DomainName.unpack(string, original)
+		result[:RNAME] = DomainName.unpack(string, original)
 
 		[:SERIAL, :REFRESH, :RETRY, :EXPIRE, :MINIMUM].each {|value|
 			result[value] = string.unpack('N').first || 0; string[0, 4] = ''

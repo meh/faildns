@@ -46,7 +46,7 @@ module IN
 
 class A < Data
 	def self._unpack (string, original)
-		A.new(IP.parse(string))
+		A.new(IP.unpack(string))
 	end
 
 	attr_reader :ip

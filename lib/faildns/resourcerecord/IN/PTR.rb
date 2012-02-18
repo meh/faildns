@@ -44,7 +44,7 @@ module IN
 
 class PTR < Data
 	def self._unpack (string, original)
-		PTR.new(DomainName.parse(string.clone, original))
+		PTR.new(DomainName.unpack(string.clone, original))
 	end
 
 	attr_reader :domain

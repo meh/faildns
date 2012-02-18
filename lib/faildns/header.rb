@@ -298,15 +298,15 @@ class Header
 		[
 			id,
 
-			( (type.value << 15)                 \
-			| (klass.value << 14)                \
+			( (type.to_i << 15)                 \
+			| (klass.to_i << 14)                \
 			| ((authoritative?) ? (1 << 10) : 0) \
 			| ((truncated?) ? (1 << 9) : 0)      \
 			| ((recursive?) ? (1 << 8) : 0)      \
 			| ((recursivable?) ? (1 << 7) : 0)   \
 			| ((authentic?) ? (1 << 6) : 0)      \
 			| ((checking?) ? (1 << 5) : 0)       \
-			| (status.value)),
+			| (status.to_i)),
 
 			questions,
 			answers,
@@ -321,4 +321,3 @@ class Header
 end
 
 end
-

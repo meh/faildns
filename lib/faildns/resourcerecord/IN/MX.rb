@@ -49,7 +49,7 @@ module IN
 
 class MX < Data
 	def self._unpack (string, original)
-		MX.new(string.unpack('n'), DomainName.parse(string[2, 255], original))
+		MX.new(string.unpack('n'), DomainName.unpack(string[2, 255], original))
 	end
 
 	attr_reader :preference, :exchange

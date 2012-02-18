@@ -21,13 +21,9 @@ require 'thread'
 require 'timeout'
 require 'socket'
 
-require 'faildns/client/dispatcher/response'
+require 'faildns/client/response'
 
-module DNS
-
-class Client
-
-class Dispatcher
+module DNS; class Client
 
 class Server
 	attr_reader :host, :port
@@ -96,8 +92,4 @@ private
 	end
 end
 
-end
-
-end
-
-end
+end; end

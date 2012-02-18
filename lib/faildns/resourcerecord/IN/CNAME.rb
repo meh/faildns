@@ -45,7 +45,7 @@ module IN
 
 class CNAME < Data
 	def self._unpack (string, original)
-		CNAME.new(DomainName.parse(string.clone, original))
+		CNAME.new(DomainName.unpack(string.clone, original))
 	end
 
 	attr_reader :domain

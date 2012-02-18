@@ -52,7 +52,7 @@ module IN
 
 class NS < Data
 	def self._unpack (string, original)
-		NS.new(DomainName.parse(string.clone, original))
+		NS.new(DomainName.unpack(string.clone, original))
 	end
 
 	attr_reader :domain

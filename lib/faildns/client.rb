@@ -30,7 +30,7 @@ class Client
 		@options = options
 		@servers = Servers.new
 		
-		@options[:servers].flatten.compact.each {|server|
+		[@options[:servers]].flatten.compact.each {|server|
 			@servers << server
 		}
 

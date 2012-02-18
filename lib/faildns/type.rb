@@ -171,7 +171,7 @@ class Type
 		elsif value.is_a? Integer
 			@internal == what
 		else
-			@internal == what.value rescue false
+			@internal == what.to_i rescue false
 		end
 	end
 
