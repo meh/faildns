@@ -17,8 +17,6 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'simpleidn'
-
 require 'faildns/version'
 
 module DNS

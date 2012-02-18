@@ -128,6 +128,8 @@ module DNS
 # labels.
 #++
 
+require 'simpleidn'
+
 class DomainName
 	def self.pointer (string, offset)
 		string[offset.unpack('n').first & 0x3FFF, 512]
