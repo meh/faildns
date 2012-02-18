@@ -59,17 +59,19 @@ module DNS
 #++
 
 class Question
-	def self.parse (string, original)
+	def self.unpack (string, original)
 		Question.new {|q|
-			q.name  = DomainName.parse(string, original);
-			q.type  = QType.parse(string);
-			q.class = QClass.parse(string);
+			q.name  = DomainName.unpack(string, original);
+			q.type  = QType.unpack(string);
+			q.class = QClass.unpack(string);
 		}
 	end
 
 	def self.length (string)
 		DomainName.length(string) + QType.length + QClass.length
 	end
+
+	include DNS::Comparable
 
 	def initialize (what = {})
 		unless what.is_a? Hash
@@ -80,6 +82,8 @@ class Question
 
 		yield self if block_given?
 	end
+
+	hash_on :@data
 
 	def name;  @data[:QNAME]  end
 	def type;  @data[:QTYPE]  end

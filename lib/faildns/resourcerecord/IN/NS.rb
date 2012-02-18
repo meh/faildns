@@ -51,7 +51,7 @@ module IN
 #++
 
 class NS < Data
-	def self._parse (string, original)
+	def self._unpack (string, original)
 		NS.new(DomainName.parse(string.clone, original))
 	end
 
@@ -60,6 +60,8 @@ class NS < Data
 	def initialize (domain)
 		@domain = domain
 	end
+
+	hash_on :@domain
 
 	def pack
 		@domain.pack

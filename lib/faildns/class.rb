@@ -41,7 +41,7 @@ class Class
 		4 => :HS
 	}
 
-	def self.parse (string)
+	def self.unpack (string)
 		result = new(string.unpack('n').first)
 
 		string[0, length] = ''
@@ -53,15 +53,15 @@ class Class
 		2
 	end
 
-	attr_reader :value
+	include DNS::Comparable
 
 	def initialize (value)
 		if value.is_a? Symbol
-			@value = Values.key(value)
+			@internal = Values.key(value)
 		elsif value.is_a? Integer
-			@value = value
+			@internal = value
 		else
-			@value = value.value rescue nil
+			@internal = value.to_i
 		end
 
 		unless to_sym
@@ -69,26 +69,32 @@ class Class
 		end
 	end
 
+	hash_on :to_i
+
 	def pack
-		[@value].pack('n')
+		[to_i].pack('n')
 	end
 
 	def == (what)
 		if what.is_a? Symbol
 			to_sym == what
 		elsif value.is_a? Integer
-			@value == what
+			@internal == what
 		else
-			@value == what.value rescue false
+			@internal == what.value rescue false
 		end
 	end
 
 	def to_sym
-		Values[@value]
+		Values[@internal]
 	end
 
 	def to_s
 		to_sym.to_s
+	end
+
+	def to_i
+		@internal
 	end
 end
 

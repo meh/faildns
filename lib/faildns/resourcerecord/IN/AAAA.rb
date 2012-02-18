@@ -47,7 +47,7 @@ module IN
 #++
 
 class AAAA < Data
-	def self._parse (string, original)
+	def self._unpack (string, original)
 		AAAA.new(IP.parse(string))
 	end
 
@@ -56,6 +56,8 @@ class AAAA < Data
 	def initialize (what)
 		@ip = IP.new(what)
 	end
+
+	hash_on :@ip
 
 	def pack
 		@ip.pack

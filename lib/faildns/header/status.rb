@@ -83,15 +83,15 @@ class Status
 		22 => :BADTRUNC
 	}
 
-	attr_reader :value
+	include DNS::Comparable
 
 	def initialize (value)
 		if value.is_a? Symbol
-			@value = Values.find {|key, val| val == value}.first rescue nil
+			@internal = Values.find {|key, val| val == value}.first rescue nil
 		elsif value.is_a? Integer
-			@value = value
+			@internal = value
 		else
-			@value = value.value rescue nil
+			@internal = value.value rescue nil
 		end
 
 		unless to_sym
@@ -99,22 +99,28 @@ class Status
 		end
 	end
 
+	hash_on :to_i
+
 	def == (what)
 		if what.is_a? Symbol
 			to_sym == what
 		elsif value.is_a? Integer
-			@value == what
+			@internal == what
 		else
-			@value == what.value rescue false
+			@internal == what.value rescue false
 		end
 	end
 
 	def to_sym
-		Values[@value]
+		Values[@internal]
 	end
 
 	def to_s
 		to_sym.to_s
+	end
+
+	def to_i
+		@internal
 	end
 end
 

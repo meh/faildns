@@ -75,11 +75,11 @@ module DNS
 #++
 
 class ResourceRecord
-	def self.parse (string, original)
+	def self.unpack (string, original)
 		ResourceRecord.new {|r|
-			r.name  = DomainName.parse(string, original)
-			r.type  = Type.parse(string)
-			r.class = Class.parse(string)
+			r.name  = DomainName.unpack(string, original)
+			r.type  = Type.unpack(string)
+			r.class = Class.unpack(string)
 
 			r.ttl = string.unpack('N').first; string[0, 4] = ''
 
@@ -92,13 +92,15 @@ class ResourceRecord
 				DNS.debug "ResourceRecord::#{r.class}::#{r.type} not found."
 			end
 
-			r.data = data.parse(string, length, original)
+			r.data = data.unpack(string, length, original)
 		}
 	end
 
 	def self.length (string)
 		(tmp = DomainName.length(string) + Type.length + Class.length + 4) + string[tmp, 2].unpack('n').first + 2
 	end
+
+	include DNS::Comparable
 
 	def initialize (what = {})
 		unless what.is_a? Hash
@@ -109,6 +111,8 @@ class ResourceRecord
 
 		yield self if block_given?
 	end
+
+	hash_on :@data
 
 	def name;   @data[:NAME]     end
 	def type;   @data[:TYPE]     end

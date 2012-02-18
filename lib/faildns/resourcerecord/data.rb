@@ -22,16 +22,13 @@ module DNS
 class ResourceRecord
 
 class Data
-	def self.parse (string, length, original)
+	def self.unpack (string, length, original)
 		data = string[0, length]; string[0, length] = ''
 
-		_parse(data, original)
+		_unpack(data, original)
 	end
 
-	private
-
-	def initialize
-	end
+	include DNS::Comparable
 end
 
 end

@@ -39,7 +39,7 @@ module IN
 #++
 
 class TXT < Data
-	def self._parse (string, original)
+	def self._unpack (string, original)
 		data = []
 
 		until string.empty?
@@ -54,6 +54,8 @@ class TXT < Data
 	def initialize (data)
 		@data = data
 	end
+
+	hash_on :@data
 
 	def pack
 		data.map { |s| [s.length, s].pack('CA*') }.join

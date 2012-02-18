@@ -77,7 +77,7 @@ class ConnectionDispatcher
     Thread.new(@dispatcher, string, socket) {|dispatcher, string, socket|
       begin
         socket  = Socket.new(dispatcher, socket)
-        message = Message.parse(string)
+        message = Message.unpack(string)
 
         DNS.debug "[Server < #{socket.to_s}] #{message.inspect}", { :level => 9, :separator => "\n" }
 

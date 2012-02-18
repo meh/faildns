@@ -25,27 +25,27 @@ require 'faildns/resourcerecord'
 module DNS
 
 class Message
-	def self.parse (string)
+	def self.unpack (string)
 		string.force_encoding 'BINARY'
 		original = string.clone
 
 		Message.new {|m|
-			m.header = Header.parse(string)
+			m.header = Header.unpack(string)
 
 			1.upto(m.header.questions) {
-				m.questions << Question.parse(string, original);
+				m.questions << Question.unpack(string, original);
 			}
 
 			1.upto(m.header.answers) {
-				m.answers << ResourceRecord.parse(string, original);
+				m.answers << ResourceRecord.unpack(string, original);
 			}
 
 			1.upto(m.header.authorities) {
-				m.authorities << ResourceRecord.parse(string, original);
+				m.authorities << ResourceRecord.unpack(string, original);
 			}
 
 			1.upto(m.header.additionals) {
-				m.additionals << ResourceRecord.parse(string, original);
+				m.additionals << ResourceRecord.unpack(string, original);
 			}
 		}
 	end
@@ -53,6 +53,8 @@ class Message
 	def self.length (string)
 		string = string.clone
 	end
+
+	include DNS::Comparable
 
 	attr_accessor :header
 	attr_reader   :questions, :answers, :authorities, :additionals
@@ -68,8 +70,13 @@ class Message
 		yield self if block_given?
 	end
 
-	def pack (normalize = true)
-		self.normalize if normalize
+	hash_on :@header, :@questions, :@answers, :@authorities, :@additionals
+
+	def pack
+		@header.questions   = @questions.length
+		@header.answers     = @answers.length
+		@header.authorities = @authorities.length
+		@header.additionals = @additionals.length
 
 		result = ''
 
@@ -82,13 +89,6 @@ class Message
 		}
 
 		result
-	end
-
-	def normalize
-		@header.questions   = @questions.length
-		@header.answers     = @answers.length
-		@header.authorities = @authorities.length
-		@header.additionals = @additionals.length
 	end
 
 	def inspect

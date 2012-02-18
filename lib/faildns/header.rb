@@ -210,7 +210,7 @@ class Header
 		(rand * 100_000).to_i % 65536
 	end
 
-	def self.parse (string)
+	def self.unpack (string)
 		data = string.unpack('nnnnnn')
 
 		string[0, Header.length] = ''
@@ -242,6 +242,8 @@ class Header
 		12
 	end
 
+	include DNS::Comparable
+
 	def initialize (what = {})
 		unless what.is_a? Hash
 			raise ArgumentError, 'you have to pass a Hash.'
@@ -251,6 +253,8 @@ class Header
 
 		yield self if block_given?
 	end
+
+	hash_on :@data
 
 	def id;             @data[:ID]      end
 	def type;           @data[:QR]      end
@@ -294,12 +298,14 @@ class Header
 		[
 			id,
 
-			( (type.value << 15) \
-			| (klass.value << 14) \
+			( (type.value << 15)                 \
+			| (klass.value << 14)                \
 			| ((authoritative?) ? (1 << 10) : 0) \
-			| ((truncated?) ? (1 << 9) : 0) \
-			| ((recursive?) ? (1 << 8) : 0) \
-			| ((recursivable?) ? (1 << 7) : 0) \
+			| ((truncated?) ? (1 << 9) : 0)      \
+			| ((recursive?) ? (1 << 8) : 0)      \
+			| ((recursivable?) ? (1 << 7) : 0)   \
+			| ((authentic?) ? (1 << 6) : 0)      \
+			| ((checking?) ? (1 << 5) : 0)       \
 			| (status.value)),
 
 			questions,

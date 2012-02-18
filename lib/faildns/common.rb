@@ -45,4 +45,34 @@ module DNS
 
 		puts output
 	end
+
+	module Comparable
+		def self.included (klass)
+			klass.instance_eval {
+				define_singleton_method :hash_on do |*names|
+					names = names.flatten.compact.map(&:to_s)
+
+					define_method :hash do
+						names.map {|name|
+							if name.start_with? '@'
+								instance_variable_get(name)
+							else
+								__send__(name)
+							end
+						}.hash
+					end
+				end
+			}
+		end
+
+		def == (o)
+			hash == o.hash
+		end
+
+		alias eql? ==
+
+		def === (o)
+			__id__ == o.__id__
+		end
+	end
 end

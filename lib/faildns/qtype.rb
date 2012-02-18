@@ -44,12 +44,14 @@ class QType < Type
 		255 => :ANY
 	}
 
+	include DNS::Comparable
+
 	def initialize (value)
 		super(value)
 	end
 
 	def to_sym
-		Values[@value] || Type::Values[@value]
+		Values[@internal] || Type::Values[@internal]
 	end
 
 	def to_s

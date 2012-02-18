@@ -40,7 +40,7 @@ module IN
 #++
 
 class NULL < Data
-	def self._parse (string, original)
+	def self._unpack (string, original)
 		NULL.new(string)
 	end
 
@@ -49,6 +49,8 @@ class NULL < Data
 	def initialize (raw)
 		@raw = raw
 	end
+
+	hash_on :@raw
 
 	def pack
 		@raw

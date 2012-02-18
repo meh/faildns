@@ -101,7 +101,7 @@ class SOA < Data
 		MINIMUM: 0
 	}
 
-	def self._parse (string, original)
+	def self._unpack (string, original)
 		result = {}
 
 		result[:MNAME] = DomainName.parse(string, original)
@@ -123,6 +123,8 @@ class SOA < Data
 
 		yield self if block_given?
 	end
+
+	hash_on :@data
 
 	def server;      @data[:MNAME]   end
 	def responsible; @data[:RNAME]   end

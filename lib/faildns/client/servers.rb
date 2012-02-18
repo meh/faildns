@@ -17,31 +17,26 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-module DNS
+require 'faildns/client/server'
 
-class Client
+module DNS; class Client
 
-class Dispatcher
+class Servers < Array
+	def initialize (*)
+		super
 
-class Server
-
-class Response
-	attr_reader :server, :message
-
-	def initialize (server, message)
-		@server  = server
-		@message = message
+		@data = {}
 	end
+
+	def push (server)
+		super(Server.new(server))
+	end
+
+	alias << push
 
 	def inspect
-		"#<Response: (#{server.inspect}) #{message.inspect}>"
+		map(&:inspect).join(' ')
 	end
 end
 
-end
-
-end
-
-end
-
-end
+end; end

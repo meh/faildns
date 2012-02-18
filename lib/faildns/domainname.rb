@@ -133,12 +133,12 @@ class DomainName
 		string[offset.unpack('n').first & 0x3FFF, 512]
 	end
 
-	def self.parse (string, whole)
+	def self.unpack (string, whole)
 		result = ''
 
 		case string.unpack('c').first & 0xC0
 			when 0xC0
-				result       << DomainName.parse(DomainName.pointer(whole, string), whole)
+				result       << DomainName.unpack(DomainName.pointer(whole, string), whole)
 				string[0, 2]  = ''
 
 			when 0x00
@@ -148,7 +148,7 @@ class DomainName
 				end
 
 				if length & 0xC0 == 0xC0
-					result << '.' + DomainName.parse(string, whole)
+					result << '.' + DomainName.unpack(string, whole)
 
 					string[0, 2] = ''
 				else
@@ -183,6 +183,8 @@ class DomainName
 		result
 	end
 
+	include DNS::Comparable
+
 	attr_accessor :domain
 
 	def initialize (domain=nil)
@@ -192,6 +194,8 @@ class DomainName
 
 		@domain = domain.to_s
 	end
+
+	hash_on :@domain
 
 	def to_s
 		@domain

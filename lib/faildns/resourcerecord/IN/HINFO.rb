@@ -47,7 +47,7 @@ module IN
 #++
 
 class HINFO < Data
-	def self._parse (string, original)
+	def self._unpack (string, original)
 		string = string.clone
 
 		cpu = string[1, (tmp = string.unpack('C'))]; string[0, tmp + 1] = ''
@@ -62,6 +62,8 @@ class HINFO < Data
 		@cpu = cpu
 		@os  = os
 	end
+
+	hash_on :@cpu, :@os
 
 	def pack
 		[@cpu.length].unpack('C') + @cpu + [@os.length].unpack('C') + @os

@@ -45,7 +45,7 @@ module IN
 #++
 
 class A < Data
-	def self._parse (string, original)
+	def self._unpack (string, original)
 		A.new(IP.parse(string))
 	end
 
@@ -54,6 +54,8 @@ class A < Data
 	def initialize (what)
 		@ip = IP.new(what)
 	end
+
+	hash_on :@ip
 
 	def pack
 		@ip.pack

@@ -30,34 +30,38 @@ class IP
 		false
 	end
 
-	def self.parse (string)
+	def self.unpack (string)
 		IP.new(IPAddr.new_ntoh(string))
 	end
 
-	attr_reader :version, :ip
+	include DNS::Comparable
 
 	def initialize (what)
 		if what.is_a?(String)
-			@ip = IPAddr.new(what.to_s)
+			@internal = IPAddr.new(what.to_s)
 		elsif what.is_a?(IP)
-			@ip = what.ip
+			@internal = what.instance_variable_get :@internal
 		elsif what.is_a?(IPAddr)
-			@ip = what
+			@internal = what
 		else
 			DNS.debug what.inspect
 
 			raise ArgumentError, 'wat is dis i dont even'
 		end
+	end
 
-		@version = (@ip.ipv4?) ? 4 : 6
+	hash_on :@internal
+
+	def version
+		@internal.ipv4? ? 4 : 6
 	end
 
 	def pack
-		@ip.hton
+		@internal.hton
 	end
 
 	def to_s
-		@ip.to_s
+		@internal.to_s
 	end
 
 	alias to_str to_s

@@ -35,12 +35,14 @@ class QClass < Class
 		255 => :ANY
 	}
 
+	include DNS::Comparable
+
 	def initialize (value)
 		super(value)
 	end
 
 	def to_sym
-		Values[@value] || Class::Values[@value]
+		Values[@internal] || Class::Values[@internal]
 	end
 
 	def to_s

@@ -19,34 +19,30 @@
 
 require 'faildns/message'
 
-require 'faildns/client/dispatcher'
+require 'faildns/client/servers'
 
 module DNS
 
 class Client
-	attr_reader :options
+	attr_reader :options, :servers
 
 	def initialize (options = {})
-		@options    = options
-		@dispatcher = Dispatcher.new([@options[:servers]].flatten.compact)
+		@options = options
+		@servers = Servers.new
+		
+		@options[:servers].flatten.compact.each {|server|
+			@servers << server
+		}
 
-		if block_given?
-			yield self
-		end
+		yield self if block_given?
 
-		if @dispatcher.servers.empty?
-			if File.readable?('/etc/resolv.conf')
-				File.read('/etc/resolv.conf').lines.each {|line|
-					line.match(/nameserver\s+(.*?)\s*$/) {
-						@dispatcher.servers << $1
-					}
+		if @servers.empty? && File.readable?('/etc/resolv.conf')
+			File.read('/etc/resolv.conf').lines.each {|line|
+				line.match(/nameserver\s+(.*?)\s*$/) {|matches|
+					@servers << matches[1]
 				}
-			end
+			}
 		end
-	end
-
-	def servers
-		@dispatcher.servers
 	end
 
 	def query (message, options = nil)
@@ -57,8 +53,6 @@ class Client
 			message = Message.new {|m|
 				m.header = Header.new {|h|
 					h.recursive!
-
-					h.questions = 1
 				}
 
 				m.questions << message
@@ -97,11 +91,13 @@ class Client
 			q.name  = domain
 			q.class = :IN
 			q.type  = ((options[:version] == 4) ? :A : :AAAA)
-		}, options.merge(limit: 1, status: [:NOERROR])).first.last.message.answers.select {|answer|
+		}, options.merge(limit: 1, status: [:NOERROR]))
+
+		return if response.empty?
+
+		response.first.last.message.answers.select {|answer|
 			answer.type == ((options[:version] == 4) ? :A : :AAAA)
-		}.map {|answer|
-			answer.data.ip
-		}
+		}.map { |answer| answer.data.ip }
 	end
 
 	def inspect

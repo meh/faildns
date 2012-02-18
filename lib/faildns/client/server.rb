@@ -48,7 +48,7 @@ class Server
 	def send (message)
 		@requests[message.header.id] = true
 
-		DNS.debug "[Client > #{self.to_s}] #{message.inspect}", { :level => 9, :separator => "\n" }
+		DNS.debug "[Client > #{self.to_s}] #{message.inspect}", level: 9, separator: "\n"
 
 		@socket.print message.pack
 	end
@@ -69,7 +69,7 @@ class Server
 		end
 
 		if (response = @responses.delete(id))
-			DNS.debug "[Client < #{self.to_s}] #{response.message.inspect rescue nil}", { :level => 9, :separator => "\n" }
+			DNS.debug "[Client < #{self.to_s}] #{response.message.inspect rescue nil}", level: 9, separator: "\n"
 		end
 
 		return response
@@ -83,7 +83,7 @@ private
 	def _recv (timeout, id = nil)
 		Timeout.timeout(timeout) {
 			while (msg = @socket.recvfrom(512) rescue nil)
-				message = Message.parse(msg[0])
+				message = Message.unpack(msg[0])
 
 				if @requests.delete(message.header.id)
 					@responses[message.header.id] = Response.new(self, message)

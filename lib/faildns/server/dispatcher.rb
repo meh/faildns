@@ -74,7 +74,7 @@ class Dispatcher
 		server.do(string, socket) {|string, socket|
 			begin
 				socket   = Socket.new(socket)
-				message  = Message.parse(string)
+				message  = Message.unpack(string)
 				response = Message.new
 
 				DNS.debug "[Server < #{socket.to_s}] #{message.inspect}", level: 9, separator: "\n"

@@ -43,7 +43,7 @@ module IN
 #++
 
 class PTR < Data
-	def self._parse (string, original)
+	def self._unpack (string, original)
 		PTR.new(DomainName.parse(string.clone, original))
 	end
 

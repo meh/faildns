@@ -44,7 +44,7 @@ module IN
 #++
 
 class CNAME < Data
-	def self._parse (string, original)
+	def self._unpack (string, original)
 		CNAME.new(DomainName.parse(string.clone, original))
 	end
 
@@ -53,6 +53,8 @@ class CNAME < Data
 	def initialize (domain)
 		@domain = DomainName.new(domain)
 	end
+
+	hash_on :@domain
 
 	def pack
 		@domain.pack

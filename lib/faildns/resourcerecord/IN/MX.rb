@@ -48,7 +48,7 @@ module IN
 #++
 
 class MX < Data
-	def self._parse (string, original)
+	def self._unpack (string, original)
 		MX.new(string.unpack('n'), DomainName.parse(string[2, 255], original))
 	end
 
@@ -58,6 +58,8 @@ class MX < Data
 		@preference = preference
 		@exchange   = exchange
 	end
+
+	hash_on :@preference, :@exchange
 
 	def pack
 		[@preference].pack('n') + @exchange.pack
