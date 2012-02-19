@@ -17,15 +17,7 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/resourcerecord/data'
-
-require 'faildns/domainname'
-
-module DNS
-
-class ResourceRecord
-
-module IN
+module DNS; class ResourceRecord; module IN
 
 #--
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -45,7 +37,7 @@ module IN
 
 class CNAME < Data
 	def self._unpack (string, original)
-		CNAME.new(DomainName.unpack(string.clone, original))
+		CNAME.new(DomainName.unpack(string.dup, original))
 	end
 
 	attr_reader :domain
@@ -56,8 +48,8 @@ class CNAME < Data
 
 	hash_on :@domain
 
-	def pack
-		@domain.pack
+	def pack (message = nil, offset = nil)
+		@domain.pack(message, offset)
 	end
 
 	def length
@@ -69,8 +61,4 @@ class CNAME < Data
 	end
 end
 
-end
-
-end
-
-end
+end; end; end

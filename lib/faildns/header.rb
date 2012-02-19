@@ -294,7 +294,7 @@ class Header
 
 	alias klass class
 
-	def pack
+	def pack (*)
 		[
 			id,
 

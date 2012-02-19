@@ -17,13 +17,7 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/resourcerecord/data'
-
-module DNS
-
-class ResourceRecord
-
-module IN
+module DNS; class ResourceRecord; module IN
 
 #--
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -57,7 +51,7 @@ class TXT < Data
 
 	hash_on :@data
 
-	def pack
+	def pack (*)
 		data.map { |s| [s.length, s].pack('CA*') }.join
 	end
 
@@ -66,8 +60,4 @@ class TXT < Data
 	end
 end
 
-end
-
-end
-
-end
+end; end; end

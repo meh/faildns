@@ -56,7 +56,7 @@ class IP
 		@internal.ipv4? ? 4 : 6
 	end
 
-	def pack
+	def pack (*)
 		@internal.hton
 	end
 

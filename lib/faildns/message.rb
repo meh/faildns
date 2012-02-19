@@ -28,7 +28,7 @@ module DNS
 class Message
 	def self.unpack (string)
 		string.force_encoding 'BINARY'
-		original = string.clone
+		original = string.dup
 
 		Message.new {|m|
 			m.header = Header.unpack(string)
@@ -52,7 +52,58 @@ class Message
 	end
 
 	def self.length (string)
-		string = string.clone
+		string = string.dup
+	end
+
+	class Compression
+		def initialize (message)
+			@message = message
+
+			@domains = {}
+		end
+
+		def method_missing (*args, &block)
+			@message.__send__ *args, &block
+		end
+
+		def pointer_for (domain, offset)
+			pieces = domain.to_s.split '.'
+
+			if tmp = @domains[pieces]
+				return [], tmp
+			else
+				unique  = nil
+				pointer = nil
+
+				@domains.each { |parts, offset|
+					next if parts.length == pieces.length
+
+					if parts.length > pieces.length
+						if parts[parts.length - pieces.length .. -1] == pieces
+							tmp = parts[0 ... parts.length - pieces.length]
+
+							unique  = []
+							pointer = offset + tmp.join.length + tmp.length
+
+							break
+						end
+					else
+						if pieces[pieces.length - parts.length .. -1] == parts
+							unique  = pieces[0 ... pieces.length - parts.length]
+							pointer = offset
+
+							break
+						end
+					end
+				}
+
+				@domains[pieces] = offset
+
+				unique = pieces unless unique
+
+				return unique, pointer
+			end
+		end
 	end
 
 	include DNS::Comparable
@@ -68,24 +119,32 @@ class Message
 		@authorities = args.shift || []
 		@additionals = args.shift || []
 
+		compress!
+
 		yield self if block_given?
 	end
 
 	hash_on :@header, :@questions, :@answers, :@authorities, :@additionals
 
-	def pack
+	def compress?;    @compress;         end
+	def compress!;    @compress = true;  end
+	def no_compress!; @compress = false; end
+
+	def pack (*)
 		@header.questions   = @questions.length
 		@header.answers     = @answers.length
 		@header.authorities = @authorities.length
 		@header.additionals = @additionals.length
 
+		message = compress? ? Compression.new(self) : self
+
 		result = ''
 
-		result << @header.pack
+		result << @header.pack(message, 0)
 
 		[@questions, @answers, @authorities, @additionals].each {|part|
 			part.each {|piece|
-				result << piece.pack
+				result << piece.pack(message, result.length)
 			}
 		}
 

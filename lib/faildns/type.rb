@@ -161,7 +161,7 @@ class Type
 
 	hash_on :@internal
 
-	def pack
+	def pack (*)
 		[@internal].pack('n')
 	end
 

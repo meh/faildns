@@ -17,13 +17,7 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/resourcerecord/data'
-
-module DNS
-
-class ResourceRecord
-
-module IN
+module DNS; class ResourceRecord; module IN
 
 #--
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -61,8 +55,8 @@ class MX < Data
 
 	hash_on :@preference, :@exchange
 
-	def pack
-		[@preference].pack('n') + @exchange.pack
+	def pack (message = nil, offset = nil)
+		[@preference].pack('n') + @exchange.pack(message, offset)
 	end
 
 	def length
@@ -70,12 +64,8 @@ class MX < Data
 	end
 
 	def to_s
-		"#{@preference}) #{@exchange}"
+		"#{@preference} #{@exchange}"
 	end
 end
 
-end
-
-end
-
-end
+end; end; end

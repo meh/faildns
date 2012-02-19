@@ -121,16 +121,25 @@ class ResourceRecord
 	def length; @data[:RDLENGTH] end
 	def data;   @data[:RDATA]    end
 
-	def name= (val);   @data[:NAME]  = DomainName.new(val);                end
-	def type= (val);   @data[:TYPE]  = Type.new(val);                      end
-	def class= (val);  @data[:CLASS] = Class.new(val);                     end
-	def ttl= (val);    @data[:TTL]   = val;                                end
-	def data= (val);   @data[:RDATA] = val; @data[:RDLENGTH] = val.length; end
+	def name= (val);   @data[:NAME]  = DomainName.new(val); end
+	def type= (val);   @data[:TYPE]  = Type.new(val);       end
+	def class= (val);  @data[:CLASS] = Class.new(val);      end
+	def ttl= (val);    @data[:TTL]   = val;                 end
+	def data= (val);   @data[:RDATA] = val;                 end
 
 	alias klass class
 
-	def pack
-		name.pack + type.pack + klass.pack + [ttl].pack('N') + [length].pack('n') + data.pack
+	def pack (message = nil, offset = nil)
+		result = name.pack(message, offset) + type.pack(message, offset) + klass.pack(message, offset) + [ttl].pack('N')
+
+		offset += result.length + 2 if offset
+
+		tmp    = data.pack(message, offset)
+		length = tmp.length
+
+		result << [length].pack('n') << tmp
+
+		result
 	end
 
 	def inspect

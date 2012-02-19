@@ -128,6 +128,7 @@ module DNS
 # labels.
 #++
 
+require 'unicode_utils'
 require 'simpleidn'
 
 class DomainName
@@ -138,33 +139,29 @@ class DomainName
 	def self.unpack (string, whole)
 		result = ''
 
-		case string.unpack('c').first & 0xC0
-			when 0xC0
-				result       << DomainName.unpack(DomainName.pointer(whole, string), whole)
-				string[0, 2]  = ''
+		while (length = string.unpack('c').first) != 0 && (length & 0xC0) != 0xC0
+			unless result.empty?
+				result << '.'
+			end
 
-			when 0x00
-				while (length = string.unpack('c').first) != 0 && (length & 0xC0) == 0
-					result                << '.' + string[1, length]
-					string[0, length + 1]  = ''
-				end
+			result << string[1, length]
+			string[0, length + 1]  = ''
+		end
 
-				if length & 0xC0 == 0xC0
-					result << '.' + DomainName.unpack(string, whole)
+		if length & 0xC0 == 0xC0
+			result << '.' unless result.empty?
+			result << DomainName.unpack(DomainName.pointer(whole, string), whole)
 
-					string[0, 2] = ''
-				else
-					string[0, 1] = ''
-				end
-
-				result[0, 1] = ''
+			string[0, 2] = ''
+		else
+			string[0, 1] = ''
 		end
 
 		DomainName.new result
 	end
 
 	def self.length (string)
-		string = string.clone
+		string = string.dup
 		result = 0
 
 		if string.unpack('c').first & 0xC0 == 0xC0
@@ -187,32 +184,46 @@ class DomainName
 
 	include DNS::Comparable
 
-	attr_accessor :domain
-
-	def initialize (domain=nil)
-		if domain.is_a? DomainName
-			domain = domain.domain
-		end
-
-		@domain = domain.to_s
+	def initialize (domain = nil)
+		replace domain if domain
 	end
 
-	hash_on :@domain
+	def replace (domain)
+		@internal = UnicodeUtils.downcase(domain.to_s)
+	end
+
+	hash_on :@internal
 
 	def to_s
-		SimpleIDN.to_unicode(@domain)
+		SimpleIDN.to_unicode(@internal)
 	end
 
 	alias to_str to_s
 
-	def pack (options = nil)
+	def pack (message = nil, offset = nil)
 		result = ''
 
-		SimpleIDN.to_ascii(@domain).split('.').each {|part|
-			result += [part.length].pack('c') + part
-		}
+		if message && offset && message.compress?
+			unique, pointer = message.pointer_for(SimpleIDN.to_ascii(@internal), offset)
 
-		result += [0].pack('c')
+			unique.each {|part|
+				result << [part.length].pack('c') + part
+			}
+
+			result << if pointer
+				[0xC000 | pointer].pack('n')
+			else
+				[0].pack('c')
+			end
+		else
+			SimpleIDN.to_ascii(@internal).split('.').each {|part|
+				result << [part.length].pack('c') + part
+			}
+
+			result << [0].pack('c')
+		end
+
+		result
 	end
 end
 

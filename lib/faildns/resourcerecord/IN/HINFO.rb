@@ -17,13 +17,7 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/resourcerecord/data'
-
-module DNS
-
-class ResourceRecord
-
-module IN
+module DNS; class ResourceRecord; module IN
 
 #--
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -48,7 +42,7 @@ module IN
 
 class HINFO < Data
 	def self._unpack (string, original)
-		string = string.clone
+		string = string.dup
 
 		cpu = string[1, (tmp = string.unpack('C'))]; string[0, tmp + 1] = ''
 		os  = string[1, string.unpack('C')]
@@ -65,7 +59,7 @@ class HINFO < Data
 
 	hash_on :@cpu, :@os
 
-	def pack
+	def pack (*)
 		[@cpu.length].unpack('C') + @cpu + [@os.length].unpack('C') + @os
 	end
 
@@ -78,8 +72,4 @@ class HINFO < Data
 	end
 end
 
-end
-
-end
-
-end
+end; end; end

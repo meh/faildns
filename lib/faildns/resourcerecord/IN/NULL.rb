@@ -17,13 +17,7 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/resourcerecord/data'
-
-module DNS
-
-class ResourceRecord
-
-module IN
+module DNS; class ResourceRecord; module IN
 
 #--
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -52,7 +46,7 @@ class NULL < Data
 
 	hash_on :@raw
 
-	def pack
+	def pack (*)
 		@raw
 	end
 
@@ -65,8 +59,4 @@ class NULL < Data
 	end
 end
 
-end
-
-end
-
-end
+end; end; end

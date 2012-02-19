@@ -76,3 +76,5 @@ module DNS
 		end
 	end
 end
+
+require 'faildns/ip'

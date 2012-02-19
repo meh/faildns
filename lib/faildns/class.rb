@@ -71,7 +71,7 @@ class Class
 
 	hash_on :@internal
 
-	def pack
+	def pack (*)
 		[to_i].pack('n')
 	end
 

@@ -17,13 +17,7 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/resourcerecord/data'
-
-module DNS
-
-class ResourceRecord
-
-module IN
+module DNS; class ResourceRecord; module IN
 
 #--
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -142,8 +136,8 @@ class SOA < Data
 	def expire= (val);      @data[:EXPIRE]  = val.to_i;            end
 	def minimum= (val);     @data[:MINIMUM] = val.to_i;            end
 
-	def pack
-		server.pack + responsible.pack + [serial].pack('N') + [refresh].pack('N') +
+	def pack (message = nil, offset = nil)
+		server.pack(message, offset) + responsible.pack(message, offset) + [serial].pack('N') + [refresh].pack('N') +
 			[self.retry].pack('N') + [expire].pack('N') + [minimum].pack('N')
 	end
 
@@ -156,8 +150,4 @@ class SOA < Data
 	end
 end
 
-end
-
-end
-
-end
+end; end; end

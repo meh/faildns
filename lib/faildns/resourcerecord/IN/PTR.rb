@@ -17,13 +17,7 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/resourcerecord/data'
-
-module DNS
-
-class ResourceRecord
-
-module IN
+module DNS; class ResourceRecord; module IN
 
 #--
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -53,8 +47,8 @@ class PTR < Data
 		@domain = domain
 	end
 
-	def pack
-		@domain.pack
+	def pack (message = nil, offset = nil)
+		@domain.pack(message, offset)
 	end
 
 	def length
@@ -66,8 +60,4 @@ class PTR < Data
 	end
 end
 
-end
-
-end
-
-end
+end; end; end

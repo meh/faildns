@@ -17,14 +17,7 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/resourcerecord/data'
-require 'faildns/ip'
-
-module DNS
-
-class ResourceRecord
-
-module IN
+module DNS; class ResourceRecord; module IN
 
 #--
 #     +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
@@ -59,7 +52,7 @@ class AAAA < Data
 
 	hash_on :@ip
 
-	def pack
+	def pack (*)
 		@ip.pack
 	end
 
@@ -72,8 +65,4 @@ class AAAA < Data
 	end
 end
 
-end
-
-end
-
-end
+end; end; end

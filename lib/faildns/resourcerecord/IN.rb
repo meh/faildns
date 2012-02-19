@@ -17,6 +17,9 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
+require 'faildns'
+require 'faildns/resourcerecord/data'
+
 require 'faildns/resourcerecord/IN/A'
 require 'faildns/resourcerecord/IN/CNAME'
 require 'faildns/resourcerecord/IN/HINFO'
