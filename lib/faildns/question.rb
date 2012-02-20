@@ -95,7 +95,7 @@ class Question
 
 	alias klass class
 
-	def pack (message = nil, offset = 0)
+	def pack (message = nil, offset = nil)
 		name.pack(message, offset) + type.pack(message, offset) + klass.pack(message, offset)
 	end
 

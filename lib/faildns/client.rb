@@ -17,91 +17,43 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/message'
-
-require 'faildns/client/servers'
+require 'faildns'
+require 'faildns/client/resolver'
 
 module DNS
 
 class Client
-	attr_reader :options, :servers
+	attr_reader :options, :resolvers
 
 	def initialize (options = {})
-		@options = options
-		@servers = Servers.new
+		@options   = options
+		@resolvers = []
 		
-		[@options[:servers]].flatten.compact.each {|server|
-			@servers << server
+		([@options[:servers]] + [@options[:resolvers]]).flatten.compact.each {|server|
+			@resolvers << server.is_a?(String) ? Resolver::DNS.new(server) : server
 		}
 
 		yield self if block_given?
+	end
 
-		if @servers.empty? && File.readable?('/etc/resolv.conf')
-			File.read('/etc/resolv.conf').lines.each {|line|
-				line.match(/nameserver\s+(.*?)\s*$/) {|matches|
-					@servers << matches[1]
-				}
-			}
-		end
+	def servers
+		@resolvers.select { |r| r.respond_to? :query }
 	end
 
 	def query (message, options = nil)
-		options = { timeout: 10, tries: 3 }.merge(options || {})
-		result  = {}
-
-		if message.is_a? Question
-			message = Message.new {|m|
-				m.header = Header.new {|h|
-					h.recursive!
-				}
-
-				m.questions << message
-			}
-		end
-
-		1.upto(options[:tries]) {
-			servers.each {|server|
-				next if result[server.to_s]
-
-				server.send(message)
-
-				response = server.recv(message.header.id, options[:timeout])
-
-				if response && (!options[:status] || options[:status].any? { |match| response.message.header.status == match })
-					result[server.to_s] = response
-				end
-
-				break if options[:limit] && result.length >= options[:limit]
-			}
-
-			break if result.length == options[:limit] || result.length == servers.length
+		servers.reduce({}) {|result, server|
+			result.merge(server.query(message, options))
 		}
-
-		result
 	end
 
 	def resolve (domain, options = nil)
-		options = { version: 4 }.merge(options || {})
-
-		response = query(Question.new {|q|
-			q.name  = domain
-			q.class = :IN
-			q.type  = ((options[:version] == 4) ? :A : :AAAA)
-		}, options.merge(limit: 1, status: [:NOERROR, :NXDOMAIN]))
-
-		response.dup.each {|name, r|
-			response.delete(name) if r.message.header.status == :NXDOMAIN
+		resolvers.reduce([]) {|result, resolver|
+			result + resolver.resolve(domain, options)
 		}
-
-		return if response.empty?
-
-		response.first.last.message.answers.select {|answer|
-			answer.type == ((options[:version] == 4) ? :A : :AAAA)
-		}.map { |answer| answer.data.ip }
 	end
 
 	def inspect
-		"#<DNS::Client: #{servers.inspect}>"
+		"#<DNS::Client: #{resolvers.map(&:inspect).join ' '}>"
 	end
 end
 

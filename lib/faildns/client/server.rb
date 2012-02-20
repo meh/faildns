@@ -28,7 +28,7 @@ module DNS; class Client
 class Server
 	attr_reader :host, :port
 
-	def initialize (host, port=53)
+	def initialize (host, port = 53)
 		@host = host
 		@port = port
 

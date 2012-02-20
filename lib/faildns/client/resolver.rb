@@ -17,26 +17,5 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/client/server'
-
-module DNS; class Client
-
-class Servers < Array
-	def initialize (*)
-		super
-
-		@data = {}
-	end
-
-	def push (server)
-		super(Server.new(server))
-	end
-
-	alias << push
-
-	def inspect
-		map(&:inspect).join(' ')
-	end
-end
-
-end; end
+require 'resolver/dns'
+require 'resolver/hosts'

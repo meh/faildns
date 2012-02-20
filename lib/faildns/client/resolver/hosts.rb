@@ -17,60 +17,35 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'ipaddr'
+module DNS; module Resolver
 
-module DNS
+class Hosts
+	DefaultFileName = '/etc/hosts'
 
-class IP
-	def self.valid? (string)
-		IPAddr.new(string)
-
-		true
-	rescue
-		false
+	def initialize (path = DefaultFileName)
+		@path = path
 	end
 
-	def self.version (string)
-		raise ArgumentError, 'not an ip' unless valid? string
-
-		IPAddr.new(string).ipv4? ? 4 : 6
-	end
-
-	def self.unpack (string)
-		IP.new(IPAddr.new_ntoh(string))
-	end
-
-	include DNS::Comparable
-
-	def initialize (what)
-		if what.is_a?(String)
-			@internal = IPAddr.new(what.to_s)
-		elsif what.is_a?(IP)
-			@internal = what.instance_variable_get :@internal
-		elsif what.is_a?(IPAddr)
-			@internal = what
+	def resolve (domain, options = nil)
+		if DNS::IP.valid?(domain)
+			name_for(domain)
 		else
-			DNS.debug what.inspect
-
-			raise ArgumentError, 'wat is dis i dont even'
+			address_for(domain)
 		end
 	end
 
-	hash_on :@internal
-
-	def version
-		@internal.ipv4? ? 4 : 6
+private
+	def address_for (name)
+		File.read(@path).lines.find {|line|
+			line =~ /^(.*?)\s*#{Regexp.escape(name)}$/
+		} && $1
 	end
 
-	def pack (*)
-		@internal.hton
+	def name_for (address)
+		File.read(@path).lines.find {|line|
+			line =~ /^(#{Regexp.escape(address)}\s*(.*?)$/
+		} && $1
 	end
-
-	def to_s
-		@internal.to_s
-	end
-
-	alias to_str to_s
 end
 
-end
+end; end

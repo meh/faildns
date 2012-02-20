@@ -189,22 +189,35 @@ class DomainName
 	end
 
 	def replace (domain)
-		@internal = UnicodeUtils.downcase(domain.to_s)
+		internal = UnicodeUtils.downcase(SimpleIDN.to_unicode(domain.to_s))
+		pieces   = SimpleIDN.to_ascii(internal).split('.')
+
+		if pieces.empty? || pieces.any? { |p| p.length > 63 || p.empty? }
+			raise ArgumentError, "#{domain} is an invalid domain (either longer than 63 part or empty part)"
+		end
+
+		@internal = internal
 	end
+
+	alias update replace
 
 	hash_on :@internal
 
 	def to_s
-		SimpleIDN.to_unicode(@internal)
+		@internal
 	end
 
 	alias to_str to_s
+
+	def to_ascii
+		SimpleIDN.to_ascii(@internal)
+	end
 
 	def pack (message = nil, offset = nil)
 		result = ''
 
 		if message && offset && message.compress?
-			unique, pointer = message.pointer_for(SimpleIDN.to_ascii(@internal), offset)
+			unique, pointer = message.pointer_for(to_ascii, offset)
 
 			unique.each {|part|
 				result << [part.length].pack('c') + part
@@ -216,7 +229,7 @@ class DomainName
 				[0].pack('c')
 			end
 		else
-			SimpleIDN.to_ascii(@internal).split('.').each {|part|
+			to_ascii.split('.').each {|part|
 				result << [part.length].pack('c') + part
 			}
 

@@ -17,60 +17,37 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'ipaddr'
+require 'faildns/client'
 
-module DNS
+class Resolv
+	DNS   = ::DNS::Resolver::DNS
+	Hosts = ::DNS::Resolver::Hosts
 
-class IP
-	def self.valid? (string)
-		IPAddr.new(string)
-
-		true
-	rescue
-		false
+	def self.getaddress (name)
+		Resolv.new.getaddress(name)
 	end
 
-	def self.version (string)
-		raise ArgumentError, 'not an ip' unless valid? string
-
-		IPAddr.new(string).ipv4? ? 4 : 6
+	def self.getaddresses (name)
+		Resolv.new.getaddresses(name)
 	end
 
-	def self.unpack (string)
-		IP.new(IPAddr.new_ntoh(string))
+	def self.each_address (name, &block)
+		Resolv.new.each_address(name, &block)
 	end
 
-	include DNS::Comparable
-
-	def initialize (what)
-		if what.is_a?(String)
-			@internal = IPAddr.new(what.to_s)
-		elsif what.is_a?(IP)
-			@internal = what.instance_variable_get :@internal
-		elsif what.is_a?(IPAddr)
-			@internal = what
-		else
-			DNS.debug what.inspect
-
-			raise ArgumentError, 'wat is dis i dont even'
-		end
+	def initialize (resolvers = nil)
+		@client = DNS::Client.new(resolvers: resolvers)
 	end
 
-	hash_on :@internal
-
-	def version
-		@internal.ipv4? ? 4 : 6
+	def getaddress (name)
+		@client.resolve(name).first
 	end
 
-	def pack (*)
-		@internal.hton
+	def getaddresses (name)
+		@client.resolve(name)
 	end
 
-	def to_s
-		@internal.to_s
+	def each_address (name)
+		getaddresses(name).each { |a| yield a }
 	end
-
-	alias to_str to_s
-end
-
 end

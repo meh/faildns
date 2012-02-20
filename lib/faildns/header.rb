@@ -191,6 +191,8 @@ module DNS
 #                 resource records in the additional records section.
 #++
 
+require 'securerandom'
+
 class Header
 	Default = {
 		AA: false, TC: false, RD: false, RA: false, AD: false, CD: true,
@@ -207,7 +209,7 @@ class Header
 	}
 
 	def self.id
-		(rand * 100_000).to_i % 65536
+		SecureRandom.random_number(65536)
 	end
 
 	def self.unpack (string)
