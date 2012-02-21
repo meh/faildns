@@ -27,10 +27,12 @@ class Hosts
 	end
 
 	def resolve (domain, options = nil)
-		if DNS::IP.valid?(domain)
+		options = { version: 4 }.merge(options || {})
+
+		if options[:reverse]
 			name_for(domain)
 		else
-			address_for(domain)
+			[address_for(domain)]
 		end
 	end
 
@@ -43,7 +45,7 @@ private
 
 	def name_for (address)
 		File.read(@path).lines.find {|line|
-			line =~ /^(#{Regexp.escape(address)}\s*(.*?)$/
+			line =~ /^#{Regexp.escape(address)}\s*(.*?)$/
 		} && $1
 	end
 end

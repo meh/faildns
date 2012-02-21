@@ -83,21 +83,25 @@ class DNS
 	def resolve (domain, options = nil)
 		options = { version: 4 }.merge(options || {})
 
-		response = query(Question.new {|q|
-			q.name  = domain
-			q.class = :IN
-			q.type  = ((options[:version] == 4) ? :A : :AAAA)
-		}, options.merge(limit: 1, status: [:NOERROR, :NXDOMAIN]))
+		if options[:reverse]
 
-		response.dup.each {|name, r|
-			response.delete(name) if r.message.header.status == :NXDOMAIN
-		}
+		else
+			response = query(Question.new {|q|
+				q.name  = domain
+				q.class = :IN
+				q.type  = ((options[:version] == 4) ? :A : :AAAA)
+			}, options.merge(limit: 1, status: [:NOERROR, :NXDOMAIN]))
 
-		return if response.empty?
+			response.dup.each {|name, r|
+				response.delete(name) if r.message.header.status == :NXDOMAIN
+			}
 
-		response.first.last.message.answers.select {|answer|
-			answer.type == ((options[:version] == 4) ? :A : :AAAA)
-		}.map { |answer| answer.data.ip }
+			return if response.empty?
+
+			response.first.last.message.answers.select {|answer|
+				answer.type == ((options[:version] == 4) ? :A : :AAAA)
+			}.map { |answer| answer.data.ip }
+		end
 	end
 end
 

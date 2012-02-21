@@ -17,5 +17,5 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'resolver/dns'
-require 'resolver/hosts'
+require 'faildns/client/resolver/dns'
+require 'faildns/client/resolver/hosts'

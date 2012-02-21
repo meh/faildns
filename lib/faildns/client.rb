@@ -33,6 +33,11 @@ class Client
 			@resolvers << server.is_a?(String) ? Resolver::DNS.new(server) : server
 		}
 
+		if @resolvers.empty?
+			@resolvers << Resolver::Hosts.new
+			@resolvers << Resolver::DNS.new
+		end
+
 		yield self if block_given?
 	end
 
