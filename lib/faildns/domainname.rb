@@ -189,6 +189,12 @@ class DomainName
 	end
 
 	def replace (domain)
+		if domain.nil? || domain.to_s.empty?
+			@internal = nil
+
+			return
+		end
+
 		internal = UnicodeUtils.downcase(SimpleIDN.to_unicode(domain.to_s))
 		pieces   = SimpleIDN.to_ascii(internal).split('.')
 
@@ -202,6 +208,10 @@ class DomainName
 	alias update replace
 
 	hash_on :@internal
+
+	def nil?
+		@internal.nil?
+	end
 
 	def to_s
 		@internal
