@@ -23,20 +23,14 @@ class Resolv
 	DNS   = ::DNS::Resolver::DNS
 	Hosts = ::DNS::Resolver::Hosts
 
-	def self.getaddress (name)
-		Resolv.new.getaddress(name)
-	end
-
-	def self.getaddresses (name)
-		Resolv.new.getaddresses(name)
-	end
-
-	def self.each_address (name, &block)
-		Resolv.new.each_address(name, &block)
-	end
+	%w[getaddress getaddresses each_address getname getnames each_name].each {|name|
+		define_singleton_method name do |*args, &block|
+			(@resolv ||= Resolv.new).__send__ name, *args, &block
+		end
+	}
 
 	def initialize (resolvers = nil)
-		@client = DNS::Client.new(resolvers: resolvers)
+		@client = ::DNS::Client.new(resolvers: resolvers)
 	end
 
 	def getaddress (name)
@@ -47,7 +41,19 @@ class Resolv
 		@client.resolve(name)
 	end
 
-	def each_address (name)
-		getaddresses(name).each { |a| yield a }
+	def each_address (name, &block)
+		getaddresses(name).each(&block)
+	end
+
+	def getname (address)
+		@client.resolve(address, reverse: true).first
+	end
+
+	def getnames (address)
+		@client.resolve(address, reverse: true)
+	end
+
+	def each_name (address, &block)
+		getnames(address).each(&block)
 	end
 end

@@ -17,7 +17,7 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-module DNS; class Client; class Server
+module DNS; class Client; class Resolver; class DNS
 
 class Response
 	attr_reader :server, :message
@@ -32,4 +32,4 @@ class Response
 	end
 end
 
-end; end; end
+end; end; end; end

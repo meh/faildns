@@ -21,9 +21,9 @@ require 'thread'
 require 'timeout'
 require 'socket'
 
-require 'faildns/client/response'
+require 'faildns/client/resolver/dns/response'
 
-module DNS; class Client
+module DNS; class Client; class Resolver; class DNS
 
 class Server
 	attr_reader :host, :port
@@ -92,4 +92,4 @@ private
 	end
 end
 
-end; end
+end; end; end; end

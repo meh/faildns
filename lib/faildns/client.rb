@@ -53,7 +53,7 @@ class Client
 
 	def resolve (domain, options = nil)
 		resolvers.reduce([]) {|result, resolver|
-			result + resolver.resolve(domain, options)
+			result.concat(resolver.resolve(domain, options))
 		}
 	end
 
