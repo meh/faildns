@@ -40,13 +40,13 @@ private
 	def address_for (name)
 		File.read(@path).lines.find {|line|
 			line =~ /^(.*?)\s*#{Regexp.escape(name)}$/
-		} && $1
+		} and IP.new($1)
 	end
 
 	def name_for (address)
 		File.read(@path).lines.find {|line|
 			line =~ /^#{Regexp.escape(address)}\s*(.*?)$/
-		} && $1
+		} and DomainName.new($1)
 	end
 end
 
