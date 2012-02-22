@@ -23,7 +23,7 @@ require 'socket'
 
 require 'faildns/client/resolver/dns/response'
 
-module DNS; class Client; class Resolver; class DNS
+module DNS; class Client; module Resolver; class DNS
 
 class Server
 	attr_reader :host, :port
@@ -44,7 +44,7 @@ class Server
 	def send (message)
 		@requests[message.header.id] = true
 
-		DNS.debug "[Client > #{to_s}] #{message.inspect}", level: 9, separator: "\n"
+		::DNS.debug "[Client > #{to_s}] #{message.inspect}", level: 9, separator: "\n"
 
 		@socket.print message.pack
 	end
@@ -65,7 +65,7 @@ class Server
 		response = @responses.delete(id)
 
 		if response
-			DNS.debug "[Client < #{to_s}] #{response.message.inspect rescue nil}", level: 9, separator: "\n"
+			::DNS.debug "[Client < #{to_s}] #{response.message.inspect rescue nil}", level: 9, separator: "\n"
 		end
 
 		response

@@ -54,7 +54,7 @@ class Client
 	def resolve (domain, options = nil)
 		resolvers.reduce([]) {|result, resolver|
 			result.concat(resolver.resolve(domain, options))
-		}
+		}.compact
 	end
 
 	def inspect

@@ -17,7 +17,9 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-module DNS; module Resolver
+require 'faildns/client/resolver/dns/server'
+
+module DNS; class Client; module Resolver
 
 class DNS
 	attr_reader :servers
@@ -50,7 +52,8 @@ class DNS
 		end
 	end
 
-	def query (message)
+	def query (message, options = nil)
+		options = { timeout: 10 }.merge(options || {})
 		result  = {}
 
 		if message.is_a? Question
@@ -105,4 +108,4 @@ class DNS
 	end
 end
 
-end; end
+end; end; end

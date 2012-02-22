@@ -17,7 +17,7 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-module DNS; module Resolver
+module DNS; class Client; module Resolver
 
 class Hosts
 	DefaultFileName = '/etc/hosts'
@@ -50,4 +50,4 @@ private
 	end
 end
 
-end; end
+end; end; end

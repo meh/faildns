@@ -20,8 +20,8 @@
 require 'faildns/client'
 
 class Resolv
-	DNS   = ::DNS::Resolver::DNS
-	Hosts = ::DNS::Resolver::Hosts
+	DNS   = ::DNS::Client::Resolver::DNS
+	Hosts = ::DNS::Client::Resolver::Hosts
 
 	%w[getaddress getaddresses each_address getname getnames each_name].each {|name|
 		define_singleton_method name do |*args, &block|
