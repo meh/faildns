@@ -87,7 +87,17 @@ class DNS
 		options = { version: 4 }.merge(options || {})
 
 		if options[:reverse]
+			response = query(Question.new {|q|
+				q.name  = domain.split('.').reverse.join('.') + '.in-addr.arpa'
+				q.class = :IN
+				q.type  = :PTR
+			}, options.merge(limit: 1, status: [:NOERROR]))
 
+			return if response.empty?
+
+			response.values.map(&:message).map(&:answers).flatten.select {|answer|
+				answer.type == :PTR
+			}.map { |answer| answer.data.domain }.uniq
 		else
 			response = query(Question.new {|q|
 				q.name  = domain
@@ -101,9 +111,9 @@ class DNS
 
 			return if response.empty?
 
-			response.first.last.message.answers.select {|answer|
+			response.values.map(&:message).(&:answers).flatten.select {|answer|
 				answer.type == ((options[:version] == 4) ? :A : :AAAA)
-			}.map { |answer| answer.data.ip }
+			}.map { |answer| answer.data.ip }.uniq
 		end
 	end
 end

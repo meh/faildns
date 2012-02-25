@@ -33,26 +33,49 @@ OptionParser.new do |o|
 	o.on '-t', '--timeout TIMEOUT', Integer, 'the timeout amount' do |value|
 		options[:timeout] = value
 	end
+
+	o.on '-x', '--reverse', 'make the resolution reverse' do
+		options[:reverse] = true
+	end
 end.parse!
 
 client = DNS::Client.new(options)
 
 ARGV.each {|arg|
-	ipv4 = client.resolve(arg, timeout: options[:timeout])
-	ipv6 = client.resolve(arg, version: 6, timeout: options[:timeout])
+	if options[:reverse]
+		names = client.resolve(arg, reverse: true, timeout: options[:timeout])
 
-	unless ipv4 || ipv6
-		puts "#{arg}: not found"
-		next
-	end
+		unless names
+			puts "#{arg}: not found"
+			next
+		end
 
-	if ipv4.length == 1
-		puts "#{arg}: #{ipv4.first}#{" (#{ipv6.first})" if ipv6.first}"
+		if names.length == 1
+			puts "#{arg}: #{names.first}"
+		else
+			puts "#{arg}: #{names.shift}"
+
+			names.each {|ip|
+				puts "#{' ' * (arg.length + 2)}#{ip}"
+			}
+		end
 	else
-		puts "#{arg}: #{ipv4.shift}"
+		ipv4 = client.resolve(arg, timeout: options[:timeout])
+		ipv6 = client.resolve(arg, version: 6, timeout: options[:timeout])
 
-		ipv4.each {|ip|
-			puts "#{' ' * (arg.length + 2)}#{ip}"
-		}
+		unless ipv4 || ipv6
+			puts "#{arg}: not found"
+			next
+		end
+
+		if ipv4.length == 1
+			puts "#{arg}: #{ipv4.first}#{" (#{ipv6.first})" if ipv6.first}"
+		else
+			puts "#{arg}: #{ipv4.shift}"
+
+			ipv4.each {|ip|
+				puts "#{' ' * (arg.length + 2)}#{ip}"
+			}
+		end
 	end
 }

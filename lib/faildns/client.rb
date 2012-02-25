@@ -52,9 +52,11 @@ class Client
 	end
 
 	def resolve (domain, options = nil)
-		resolvers.reduce([]) {|result, resolver|
+		result = resolvers.reduce([]) {|result, resolver|
 			result.concat(resolver.resolve(domain, options) || [])
 		}.compact
+
+		result.empty? ? nil : result
 	end
 
 	def inspect

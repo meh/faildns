@@ -30,23 +30,23 @@ class Hosts
 		options = { version: 4 }.merge(options || {})
 
 		if options[:reverse]
-			name_for(domain)
+			names_for(domain)
 		else
-			[address_for(domain)]
+			addresses_for(domain)
 		end
 	end
 
 private
-	def address_for (name)
-		File.read(@path).lines.find {|line|
-			line =~ /^(.*?)\s*#{Regexp.escape(name)}$/
-		} and IP.new($1)
+	def addresses_for (name)
+		File.read(@path).lines.map {|line|
+			line.match /^(.*?)\s*#{Regexp.escape(name)}$/
+		}.compact.map { |m| IP.new(m) }
 	end
 
-	def name_for (address)
-		File.read(@path).lines.find {|line|
-			line =~ /^#{Regexp.escape(address)}\s*(.*?)$/
-		} and DomainName.new($1)
+	def names_for (address)
+		File.read(@path).lines.map {|line|
+			line.match /^#{Regexp.escape(address)}\s*(.*?)$/
+		}.compact.map { |m| DomainName.new(m) }
 	end
 end
 
