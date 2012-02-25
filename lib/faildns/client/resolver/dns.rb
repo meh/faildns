@@ -111,7 +111,7 @@ class DNS
 
 			return if response.empty?
 
-			response.values.map(&:message).(&:answers).flatten.select {|answer|
+			response.values.map(&:message).map(&:answers).flatten.select {|answer|
 				answer.type == ((options[:version] == 4) ? :A : :AAAA)
 			}.map { |answer| answer.data.ip }.uniq
 		end

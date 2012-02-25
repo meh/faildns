@@ -47,6 +47,7 @@ ARGV.each {|arg|
 
 		unless names
 			puts "#{arg}: not found"
+
 			next
 		end
 
@@ -65,11 +66,12 @@ ARGV.each {|arg|
 
 		unless ipv4 || ipv6
 			puts "#{arg}: not found"
+
 			next
 		end
 
 		if ipv4.length == 1
-			puts "#{arg}: #{ipv4.first}#{" (#{ipv6.first})" if ipv6.first}"
+			puts "#{arg}: #{ipv4.first}#{" (#{ipv6.first})" if ipv6}"
 		else
 			puts "#{arg}: #{ipv4.shift}"
 
