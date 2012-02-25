@@ -17,7 +17,8 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-require 'faildns/message'
+require 'faildns'
+require 'forwardable'
 
 require 'faildns/server/dispatcher'
 
@@ -36,13 +37,8 @@ class Server
 
 		@options    = options
 		@dispatcher = Dispatcher.new(self)
-		@pool       = ThreadPool.new
 
 		yield self if block_given?
-	end
-
-	def do (*args, &block)
-		@pool.process *args, &block
 	end
 
 	def start

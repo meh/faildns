@@ -17,35 +17,30 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-module DNS
+module DNS; class Server; class Dispatcher
 
-class Server
+class Client < EM::Connection
+	attr_reader :dispatcher, :ip, :port, :type
 
-class Dispatcher
-
-class ConnectionDispatcher
-
-class Socket
-	attr_reader :ip, :port, :type
-
-	def initialize (dispatcher, what)
-		if what.is_a? TCPSocket
-			@type = :tcp
-			@ip   = what.peeraddr[3]
-			@port = what.addr[1]
-
-			@socket = what
-		else
-			@type = :udp
-			@ip   = what[3]
-			@port = what[1]
-
-			@socket = UDPSocket.new
-		end
+	def post_init
+		@ip   = Socket.unpack_sockaddr_in(get_peername).last
+		@port = Socket.unpack_sockaddr_in(get_sockname).first
 	end
 
-	def send (message, close = true)
-		if @type == :udp && (tmp = message.pack).length > 512
+	def receive_data (data)
+		message  = Message.unpack(data)
+		response = Message.new
+
+		dispatcher.input  message, response
+		dispatcher.output response
+
+		send_message response
+	ensure
+		close_connection_after_writing
+	end
+
+	def send_message (message)
+		if type == :udp && (tmp = message.pack).length > 512
 			[message.additionals, message.authorities, message.answers, message.questions].each {|rr|
 				while (tmp = message.pack).length > 512 && rr.pop; end
 
@@ -64,21 +59,7 @@ class Socket
 			data = tmp
 		end
 
-		DNS.debug "[Server > #{to_s}] #{message.inspect}", level: 9, separator: "\n"
-
-		if @socket.is_a? TCPSocket
-			@socket.send_nonblock(data)
-
-			@socket.close if close
-		else
-			@socket.send(data, 0, ::Socket.pack_sockaddr_in(@port, @ip))
-		end
-	end
-
-	def close
-		if type == :tcp
-			@socket.close
-		end
+		send_data(data)
 	end
 
 	def to_s
@@ -90,10 +71,4 @@ class Socket
 	end
 end
 
-end
-
-end
-
-end
-
-end
+end; end; end

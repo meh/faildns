@@ -17,31 +17,44 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
-
-module DNS
+module DNS; class Server; class Dispatcher
 
 class Server
+	attr_reader :dispatcher, :type, :host, :port
 
-class Dispatcher
+	def initialize (dispatcher, type, host, port)
+		@dispatcher = dispatcher
 
-class Event
-    class Callback
-        attr_reader :method
-        attr_accessor :priority
+		@type = type
+		@host = host
+		@port = port
+	end
 
-        def initialize (method, priority=0)
-            @method   = method
-            @priority = priority
-        end
+	def start
+		dispatcher = @dispatcher
 
-        def call (*args)
-            return @method.call(*args)
-        end
-    end
+		@signature = if type == :tcp
+			EM.start_server host, port, Client do |client|
+				client.instance_eval {
+					@dispatcher = dispatcher
+
+					@type = :tcp
+				}
+			end
+		else
+			EM.open_datagram_socket host, port, Client do |client|
+				client.instance_eval {
+					@dispatcher = dispatcher
+
+					@type = :udp
+				}
+			end
+		end
+	end
+
+	def stop
+		EM.stop_server @signature
+	end
 end
 
-end
-
-end
-
-end
+end; end; end
