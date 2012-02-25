@@ -34,7 +34,7 @@ class Resolv
 	end
 
 	def getaddress (name)
-		@client.resolve(name).first
+		@client.resolve(name).first rescue nil
 	end
 
 	def getaddresses (name)
@@ -46,7 +46,7 @@ class Resolv
 	end
 
 	def getname (address)
-		@client.resolve(address, reverse: true).first
+		@client.resolve(address, reverse: true).first rescue nil
 	end
 
 	def getnames (address)

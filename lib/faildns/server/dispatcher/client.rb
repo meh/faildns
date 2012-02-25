@@ -19,13 +19,8 @@
 
 module DNS; class Server; class Dispatcher
 
-class Client < EM::Connection
-	attr_reader :dispatcher, :ip, :port, :type
-
-	def post_init
-		@ip   = Socket.unpack_sockaddr_in(get_peername).last
-		@port = Socket.unpack_sockaddr_in(get_sockname).first
-	end
+module Client
+	attr_reader :dispatcher, :type
 
 	def receive_data (data)
 		message  = Message.unpack(data)
@@ -35,8 +30,10 @@ class Client < EM::Connection
 		dispatcher.output response
 
 		send_message response
+	rescue Exception => e
+		DNS.debug e
 	ensure
-		close_connection_after_writing
+		close_connection_after_writing if type == :tcp
 	end
 
 	def send_message (message)

@@ -17,6 +17,8 @@
 # along with faildns. If not, see <http://www.gnu.org/licenses/>.
 #++
 
+require 'eventmachine'
+
 require 'faildns/server/dispatcher/server'
 require 'faildns/server/dispatcher/client'
 

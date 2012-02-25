@@ -30,7 +30,11 @@ class Client
 		@resolvers = []
 		
 		([@options[:servers]] + [@options[:resolvers]]).flatten.compact.each {|server|
-			@resolvers << server.is_a?(String) ? Resolver::DNS.new(server) : server
+			@resolvers << if server.is_a?(String) || server.is_a?(Hash)
+				Resolver::DNS.new(server)
+			else
+				server
+			end
 		}
 
 		if @resolvers.empty?

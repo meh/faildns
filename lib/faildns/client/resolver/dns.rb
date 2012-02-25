@@ -27,9 +27,9 @@ class DNS
 	def initialize (config_info = nil)
 		if config_info.nil?
 			@config = '/etc/resolv.conf'
-		elsif config.is_a? String
+		elsif config_info.is_a? String
 			@config = config_info
-		elsif config.is_a? Hash
+		elsif config_info.is_a? Hash
 			@config = config_info
 		else
 			raise ArgumentError, 'you have to pass a Hash or a String'
@@ -44,11 +44,11 @@ class DNS
 		else
 			@config[:nameserver].each {|host|
 				@servers << Server.new(host)
-			}
+			} if @config[:nameserver]
 
 			@config[:nameserver_port].each {|host, port|
 				@servers << Server.new(host, port)
-			}
+			} if @config[:nameserver_port]
 		end
 	end
 

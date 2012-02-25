@@ -28,7 +28,7 @@ class Server
 	extend Forwardable
 
 	attr_reader    :options, :dispatcher
-	def_delegators :@dispatcher, :listen
+	def_delegators :@dispatcher, :listen, :input, :output
 
 	def initialize (options = {})
 		unless options.is_a? Hash
@@ -53,10 +53,6 @@ class Server
 		@stopping = true
 
 		@dispatcher.stop
-	end
-
-	def to_s
-		"#{@host}#{":#{@port}" if @port != 53}"
 	end
 end
 

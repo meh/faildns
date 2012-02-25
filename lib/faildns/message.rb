@@ -51,10 +51,6 @@ class Message
 		}
 	end
 
-	def self.length (string)
-		string = string.dup
-	end
-
 	class Compression
 		def initialize (message)
 			@message = message
