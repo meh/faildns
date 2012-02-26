@@ -26,6 +26,11 @@ module Client
 		message  = Message.unpack(data)
 		response = Message.new
 
+		ip = IP.new(Socket.unpack_sockaddr_in(get_peername).last)
+
+		message.from = ip
+		response.to  = ip
+
 		dispatcher.input  message, response
 		dispatcher.output response
 

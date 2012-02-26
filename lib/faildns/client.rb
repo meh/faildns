@@ -37,7 +37,7 @@ class Client
 			end
 		}
 
-		if @resolvers.empty?
+		if @resolvers.empty? && @options[:servers] != false && @options[:resolvers] != false
 			@resolvers << Resolver::Hosts.new
 			@resolvers << Resolver::DNS.new
 		end

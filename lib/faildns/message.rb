@@ -104,7 +104,7 @@ class Message
 
 	include DNS::Comparable
 
-	attr_accessor :header
+	attr_accessor :header, :from, :to
 	attr_reader   :questions, :answers, :authorities, :additionals
 
 	def initialize (header = nil, *args)
