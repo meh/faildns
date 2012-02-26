@@ -50,15 +50,30 @@ class Client
 	end
 
 	def query (message, options = nil)
-		servers.reduce({}) {|result, server|
-			result.merge(server.query(message, options))
-		}
+		options = { timeout: 10, single_timeout: 5 }.merge(options || {})
+		result  = {}
+
+		Timeout.timeout(options[:timeout]) {
+			servers.each {|server|
+				result.merge!(server.query(message, options.merge(timeout: options[:single_timeout])))
+			}
+		} rescue nil
+
+		result.empty? ? nil : result
 	end
 
 	def resolve (domain, options = nil)
-		result = resolvers.reduce([]) {|result, resolver|
-			result.concat(resolver.resolve(domain, options) || [])
-		}.compact
+		options = { timeout: 10, single_timeout: 5 }.merge(options || {})
+		result  = []
+
+		Timeout.timeout(options[:timeout]) {
+			resolvers.each {|resolver|
+				result.concat(resolver.resolve(domain, options.merge(timeout: options[:single_timeout])) || [])
+			}
+		} rescue nil
+
+		resolvers.compact!
+		resolvers.uniq!
 
 		result.empty? ? nil : result
 	end
