@@ -24,7 +24,7 @@ require 'faildns/client'
 options = {}
 
 OptionParser.new do |o|
-	options[:timeout] = 1
+	options[:timeout] = 5
 
 	o.on '-s', '--servers SERVER...', Array, 'the servers to use to resolve' do |value|
 		options[:servers] = value
