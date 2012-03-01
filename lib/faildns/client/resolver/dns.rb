@@ -52,9 +52,13 @@ class DNS
 		end
 	end
 
-	def query (message, options = nil)
+	def query (message = nil, options = nil, &block)
 		options = { timeout: 10 }.merge(options || {})
 		result  = {}
+
+		if !message && !block
+			raise ArgumentError, 'you have to pass either a Message, Question or a block'
+		end
 
 		if message.is_a? Question
 			message = Message.new {|m|
@@ -64,6 +68,8 @@ class DNS
 
 				m.questions << message
 			}
+		elsif block
+			message = Message.new(&block)
 		end
 
 		servers.each {|server|

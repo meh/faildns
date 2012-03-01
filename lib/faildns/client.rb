@@ -49,15 +49,17 @@ class Client
 		@resolvers.select { |r| r.respond_to? :query }
 	end
 
-	def query (message, options = nil)
+	def query (message = nil, options = nil, &block)
 		options = { timeout: 10, single_timeout: 5 }.merge(options || {})
 		result  = {}
 
-		Timeout.timeout(options[:timeout]) {
-			servers.each {|server|
-				result.merge!(server.query(message, options.merge(timeout: options[:single_timeout])))
+		begin
+			Timeout.timeout(options[:timeout]) {
+				servers.each {|server|
+					result.merge!(server.query(message, options.merge(timeout: options[:single_timeout]), &block))
+				}
 			}
-		} rescue nil
+		rescue Timeout::Error; end
 
 		result.empty? ? nil : result
 	end
@@ -66,11 +68,13 @@ class Client
 		options = { timeout: 10, single_timeout: 5 }.merge(options || {})
 		result  = []
 
-		Timeout.timeout(options[:timeout]) {
-			resolvers.each {|resolver|
-				result.concat(resolver.resolve(domain, options.merge(timeout: options[:single_timeout])) || [])
+		begin
+			Timeout.timeout(options[:timeout]) {
+				resolvers.each {|resolver|
+					result.concat(resolver.resolve(domain, options.merge(timeout: options[:single_timeout])) || [])
+				}
 			}
-		} rescue nil
+		rescue Timeout::Error; end
 
 		resolvers.compact!
 		resolvers.uniq!
